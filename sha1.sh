@@ -6,9 +6,9 @@ function sha1::integer::fromChar()
 
 function sha1::integer::fromBinary()
 {
-    local input_value=${1}
+    local input_value="0b${1}"
 
-    echo "obase=10;ibase=2;${input_value}" | bc
+    echo $((${input_value}))
 }
 
 function sha1::binary::baseInternalStates()
@@ -44,7 +44,7 @@ function sha1::binary::fromInteger()
 {
     local input_value=${1}
 
-    echo "ibase=10;obase=2;${input_value}" | bc
+    echo $(([#2]${input_value})) | cut -d '#' -f 2
 }
 
 function sha1::binary::fromChar()
