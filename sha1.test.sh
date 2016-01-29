@@ -16,6 +16,21 @@ function test::sha1::integer::fromBinary()
     [[ ${result} == 10 ]] && return 0 || return 1
 }
 
+function test::sha1::binary::baseInternalStates()
+{
+    local result=$(sha1::binary::baseInternalStates)
+    local expected_result_blocks="01100111010001010010001100000001 11101111110011011010101110001001 10011000101110101101110011111110 00010000001100100101010001110110 11000011110100101110000111110000"
+
+    [[ "${result}" == "${expected_result_blocks}" ]] && return 0 || return 1
+}
+
+function test::sha1::binary::fromHex()
+{
+    local result=$(sha1::binary::fromHex 'ff')
+
+    [[ "${result}" == "11111111" ]] && return 0 || return 1
+}
+
 function test::sha1::binary::fromInteger()
 {
     local result=$(sha1::binary::fromInteger 97)

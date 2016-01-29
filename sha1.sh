@@ -11,6 +11,35 @@ function sha1::integer::fromBinary()
     echo "obase=10;ibase=2;${input_value}" | bc
 }
 
+function sha1::binary::baseInternalStates()
+{
+    local base_length=32
+    local states=(
+        '67452301'
+        'EFCDAB89'
+        '98BADCFE'
+        '10325476'
+        'C3D2E1F0'
+    )
+
+    local binary_states=()
+    foreach s (${states}); do
+        local binary=$(sha1::binary::fromHex ${s})
+        local padding_length=$((${base_length} - ${#binary}))
+        binary="${(l.${padding_length}..0.)}${binary}"
+        binary_states=(${binary_states} ${binary})
+    ; done
+
+    echo -n ${binary_states}
+}
+
+function sha1::binary::fromHex()
+{
+    local input_value="0x${1}"
+
+    echo $(([#2]${input_value})) | cut -d '#' -f 2
+}
+
 function sha1::binary::fromInteger()
 {
     local input_value=${1}
