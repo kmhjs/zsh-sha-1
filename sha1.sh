@@ -54,6 +54,44 @@ function sha1::binary::constntForStepID()
     echo -n ${binary}
 }
 
+function sha1::binary::transformForStepID()
+{
+    local step_id=${1}
+    local in_b="0b${2}"
+    local in_c="0b${3}"
+    local in_d="0b${4}"
+
+    local base_length=32
+    local state=$(((${step_id} / 20) + 1))
+
+    local result=""
+    case ${state} in
+        1)
+            result=$(((${in_b} & ${in_c}) | (~${in_b} & ${in_d})))
+            ;;
+        2)
+            result=$((${in_b} ^ ${in_c} ^ ${in_d}))
+            ;;
+        3)
+            result=$(((${in_b} & ${in_c}) | (${in_c} & ${in_d}) | (${in_d} & ${in_b})))
+            ;;
+        *)
+            result=$((${in_b} ^ ${in_c} ^ ${in_d}))
+            ;;
+    esac
+
+    result=$(echo $(([#2]${result})) | cut -d '#' -f 2)
+
+    if [[ ${#result} -lt ${base_length} ]]; then
+        local padding_length=$((${base_length} - ${#result}))
+        result="${(l.${padding_length}..0.)}${result}"
+    elif [[ ${#result} -gt ${base_length} ]]; then
+        result=${result[-${base_length}, -1]}
+    fi
+
+    echo -n ${result}
+}
+
 function sha1::binary::fromHex()
 {
     local input_value="0x${1}"
@@ -189,5 +227,6 @@ function sha1::binary::block::computeRotatedBlocks()
 function sha1::binary::block::updateInternalState()
 {
     local current_internal_states=(${1})
+
 
 }

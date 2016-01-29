@@ -48,6 +48,17 @@ function test::sha1::binary::constntForStepID()
     return 0
 }
 
+function test::sha1::binary::transformForStepID()
+{
+    local result=$(sha1::binary::transformForStepID \
+                   24 \
+                   10010100101001010001010101001010\
+                   00101001010010100101001010100101\
+                   11010101001010010100101110100101)
+
+    [[ "${result}" == "01101000110001100000110001001010" ]] && return 0 || return 1
+}
+
 function test::sha1::binary::fromHex()
 {
     local result=$(sha1::binary::fromHex 'ff')
