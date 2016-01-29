@@ -24,6 +24,30 @@ function test::sha1::binary::baseInternalStates()
     [[ "${result}" == "${expected_result_blocks}" ]] && return 0 || return 1
 }
 
+function test::sha1::binary::constntForStepID()
+{
+    local current_state=$(sha1::binary::constntForStepID 0)
+    local last_state
+
+    for i ({2..80}); do
+        last_state=${current_state}
+        current_state=$(sha1::binary::constntForStepID $((${i} - 1)))
+
+        if [[ $(((${i} % 20) - 1)) == 0 && ${i} > 10 ]]; then
+            if [[ "${last_state}" == "${current_state}" ]]; then
+                echo "foo"
+                return 1
+            ; fi
+        ; else ;
+            if [[ "${last_state}" != "${current_state}" ]]; then
+                return 1
+            ; fi
+        fi
+    ; done
+
+    return 0
+}
+
 function test::sha1::binary::fromHex()
 {
     local result=$(sha1::binary::fromHex 'ff')

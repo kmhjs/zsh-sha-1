@@ -33,6 +33,27 @@ function sha1::binary::baseInternalStates()
     echo -n ${binary_states}
 }
 
+function sha1::binary::constntForStepID()
+{
+    local step_id=${1}
+
+    local base_length=32
+    local states=(
+        '5A827999'
+        '6ED9EBA1'
+        '8F1BBCDC'
+        'CA62C1D6'
+    )
+
+    local state=${states[$(((${step_id} / 20) + 1))]}
+
+    local binary=$(sha1::binary::fromHex ${state})
+    local padding_length=$((${base_length} - ${#binary}))
+    binary="${(l.${padding_length}..0.)}${binary}"
+
+    echo -n ${binary}
+}
+
 function sha1::binary::fromHex()
 {
     local input_value="0x${1}"
@@ -163,4 +184,10 @@ function sha1::binary::block::computeRotatedBlocks()
     ; done
 
     echo ${blocks}
+}
+
+function sha1::binary::block::updateInternalState()
+{
+    local current_internal_states=(${1})
+
 }
