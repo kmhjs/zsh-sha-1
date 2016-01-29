@@ -67,8 +67,9 @@ function sha1::binary::splitIntoBitBlocks()
     echo -n ${result_string[2, -1]}
 }
 
-function sha1::binary::zeroPadding()
+function sha1::binary::createBlocks()
 {
+    # Zero-padding & Append footer
     local base_length=512
     local reserved_length=64
     local input_binary_string=${1}
@@ -80,6 +81,8 @@ function sha1::binary::zeroPadding()
 
     for idx ({1..${#blocks}}); do
         local block=${blocks[${idx}]}
+        local block_length_binary=$(sha1::binary::fromInteger ${#block})
+        block_length_binary="${(l.$((${reserved_length} - ${#block_length_binary}))..0.)}${block_length_binary}"
 
         [[ ${idx} == ${#blocks} ]] && {
             local padding_length=$((${data_length} - ${#block}))
@@ -90,7 +93,7 @@ function sha1::binary::zeroPadding()
             block="${block}${(l.${padding_length}..0.)}"
         }
 
-        result_blocks="${result_blocks}${delimiter}${block}"
+        result_blocks="${result_blocks}${delimiter}${block}${block_length_binary}"
     ; done
 
     echo -n ${result_blocks[2, -1]}

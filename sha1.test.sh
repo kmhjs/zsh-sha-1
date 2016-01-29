@@ -48,14 +48,19 @@ function test::sha1::binary::splitIntoBitBlocks()
     [[ "${result}" == "${(l.16..0.)} ${(l.16..0.)} ${(l.1..0.)}" ]] && return 0 || return 1
 }
 
-function test::sha1::binary::zeroPadding()
+function test::sha1::binary::createBlocks()
 {
     local data_length=$((512 - 64))
     local input_sample=${(l.$((${data_length} + 1))..0.)}
 
-    local result=$(sha1::binary::zeroPadding ${input_sample})
+    local result=$(sha1::binary::createBlocks ${input_sample})
 
-    [[ "${result}" == "${(l.${data_length}..0.)} 01${(l.$((${data_length} - 2))..0.)}" ]] && return 0 || return 1
+    local expected_result_blocks=(
+        "${(l.${data_length}..0.)}${(l.55..0.)}111000000"
+        "01${(l.$((${data_length} - 2))..0.)}${(l.63..0.)}1"
+    )
+
+    [[ "${result}" == "${expected_result_blocks[1]} ${expected_result_blocks[2]}" ]] && return 0 || return 1
 }
 
 foreach function_name ($(cat ${0} | sed -n 's!^function  *test!test!p' | tr -d '()')); do
