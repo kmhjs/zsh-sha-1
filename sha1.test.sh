@@ -9,6 +9,13 @@ function test::sha1::integer::fromChar()
     [[ ${result} == 97 ]] && return 0 || return 1
 }
 
+function test::sha1::integer::fromBinary()
+{
+    local result=$(sha1::integer::fromBinary '1010')
+
+    [[ ${result} == 10 ]] && return 0 || return 1
+}
+
 function test::sha1::binary::fromInteger()
 {
     local result=$(sha1::binary::fromInteger 97)
