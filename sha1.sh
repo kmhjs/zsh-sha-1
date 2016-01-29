@@ -57,7 +57,7 @@ function sha1::binary::splitIntoBitBlocks()
 
     local result_string=''
 
-    while [[ ${#input_binary_string} > ${block_length} ]]; do
+    while [[ $((${#input_binary_string} - ${block_length})) > 0 ]]; do
         result_string="${result_string}${delimiter}${input_binary_string[1,${block_length}]}"
         input_binary_string="${input_binary_string[$((${block_length} + 1)), -1]}"
     ; done
@@ -97,4 +97,13 @@ function sha1::binary::createBlocks()
     ; done
 
     echo -n ${result_blocks[2, -1]}
+}
+
+function sha1::binary::block::computeRotatedBlocks()
+{
+    # This method computes W16 to W80
+    local input_block=${1}
+    local blocks=$(sha1::binary::splitIntoBitBlocks ${input_block} 32 ' ')
+
+    echo $blocks
 }
