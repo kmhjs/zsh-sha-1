@@ -4,6 +4,13 @@ function sha1::integer::fromChar()
     printf "%d" \'${1}
 }
 
+function sha1::integer::fromBinary()
+{
+    local input_value=${1}
+
+    echo "obase=10;ibase=2;${input_value}" | bc
+}
+
 function sha1::binary::fromInteger()
 {
     local input_value=${1}
@@ -103,7 +110,28 @@ function sha1::binary::block::computeRotatedBlocks()
 {
     # This method computes W16 to W80
     local input_block=${1}
-    local blocks=$(sha1::binary::splitIntoBitBlocks ${input_block} 32 ' ')
+    local blocks=($(sha1::binary::splitIntoBitBlocks ${input_block} 32 ' '))
 
-    echo $blocks
+    for idx ({16..79}); do
+        local base_values=(
+            $(sha1::integer::fromBinary ${blocks[$((${idx} - 16 + 1))]})
+            $(sha1::integer::fromBinary ${blocks[$((${idx} - 14 + 1))]})
+            $(sha1::integer::fromBinary ${blocks[$((${idx} - 8 + 1))]})
+            $(sha1::integer::fromBinary ${blocks[$((${idx} - 3 + 1))]})
+        )
+
+        local xor_value=${base_values[1]}
+        for i ({2..4}); do
+            xor_value=$((${xor_value} ^ ${base_values[${i}]}))
+        ; done
+
+        local xor_binary_value=$(sha1::binary::fromInteger ${xor_value})
+        local padding_length=$((32 - ${#xor_binary_value}))
+        xor_binary_value="${(l.${padding_length}..0.)}${xor_binary_value}"
+        xor_binary_value="${xor_binary_value[2, -1]}${xor_binary_value[1]}"
+
+        blocks=(${blocks} ${xor_binary_value})
+    ; done
+
+    echo ${blocks}
 }
