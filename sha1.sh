@@ -135,36 +135,44 @@ function sha1::binary::constant::step_coef()
 function sha1::binary::mapping::step_mapping()
 {
     local step_id=${1}
-    local in_b="0b${2}"
-    local in_c="0b${3}"
-    local in_d="0b${4}"
-
     local base_length=32
+
+    # Pick up buffers
+    local B="0b${2}"
+    local C="0b${3}"
+    local D="0b${4}"
+
+    # Compute state from step ID
     local state=$(((${step_id} / 20) + 1))
 
+    # This will be used for computation of inverse of bits
     local unsigned_inv_mask="0b${(l.${base_length}..1.)}"
 
+    # Apply mapping function
     local result=""
     case ${state} in
         1)
-            result=$(((${in_b} & ${in_c}) | ((${unsigned_inv_mask} - ${in_b}) & ${in_d})))
+            result=$(((${B} & ${C}) | ((${unsigned_inv_mask} - ${B}) & ${D})))
             ;;
         2)
-            result=$((${in_b} ^ ${in_c} ^ ${in_d}))
+            result=$((${B} ^ ${C} ^ ${D}))
             ;;
         3)
-            result=$(((${in_b} & ${in_c}) | (${in_c} & ${in_d}) | (${in_d} & ${in_b})))
+            result=$(((${B} & ${C}) | (${C} & ${D}) | (${D} & ${B})))
             ;;
         *)
-            result=$((${in_b} ^ ${in_c} ^ ${in_d}))
+            result=$((${B} ^ ${C} ^ ${D}))
             ;;
     esac
 
+    # Convert into binary notation
     result=$(echo $(([#2]${result})) | cut -d '#' -f 2)
 
+    # If padding is required, padding. Otherwise, trim.
     if [[ ${#result} -lt ${base_length} ]]; then
         local padding_length=$((${base_length} - ${#result}))
         result="${(l.${padding_length}..0.)}${result}"
+
     elif [[ ${#result} -gt ${base_length} ]]; then
         result=${result[-${base_length}, -1]}
     fi
@@ -183,25 +191,35 @@ function sha1::binary::mapping::to_blocks()
     local reserved_length=64
     local input_binary_string=${1}
     local data_length=$((${base_length} - ${reserved_length}))
+
+    # Split input binary string into (512 - 64)-bits blocks
     local blocks=($(converter::binary::split ${input_binary_string} ${data_length} ' '))
 
     local result_blocks=''
     local delimiter=' '
 
+    # Complete to create 512-bits blocks
     for idx ({1..${#blocks}}); do
+        # Compute original message length (number of bits), and append 64-bits padded binary data with 0
         local block=${blocks[${idx}]}
         local block_length_binary=$(converter::binary::from_integer ${#block})
         block_length_binary="${(l.$((${reserved_length} - ${#block_length_binary}))..0.)}${block_length_binary}"
 
+        # If reached to the end of message
         [[ ${idx} == ${#blocks} ]] && {
             local padding_length=$((${data_length} - ${#block}))
+
+            # When padding is required, append padding information '10000000', and padding
             [[ $((${padding_length} - 8)) > 0 ]] && {
                 block="${block}10000000"
                 padding_length=$((${padding_length} - 8))
             }
+
+            # Complete block
             block="${block}${(l.${padding_length}..0.)}"
         }
 
+        # Append to result blocks
         result_blocks="${result_blocks}${delimiter}${block}${block_length_binary}"
     ; done
 
@@ -216,8 +234,11 @@ function sha1::binary::mapping::to_rotated_blocks()
 {
     # This method computes W16 to W80
     local input_block=${1}
+
+    # Split input binary string into 32-bits blocks
     local blocks=($(converter::binary::split ${input_block} 32 ' '))
 
+    # Compute W16 to W80
     for idx ({16..79}); do
         local base_values=(
             $(converter::integer::from_binary ${blocks[$((${idx} - 16 + 1))]})
@@ -226,17 +247,16 @@ function sha1::binary::mapping::to_rotated_blocks()
             $(converter::integer::from_binary ${blocks[$((${idx} - 3 + 1))]})
         )
 
-        local xor_value=${base_values[1]}
-        for i ({2..4}); do
-            xor_value=$((${xor_value} ^ ${base_values[${i}]}))
-        ; done
+        # Compute rotation
+        local xor_value=$(echo $(([#2] ${base_values[1]} ^ ${base_values[2]} ^ ${base_values[3]} ^ ${base_values[4]})) | cut -d '#' -f 2)
 
-        local xor_binary_value=$(converter::binary::from_integer ${xor_value})
-        local padding_length=$((32 - ${#xor_binary_value}))
-        xor_binary_value="${(l.${padding_length}..0.)}${xor_binary_value}"
-        xor_binary_value="${xor_binary_value[2, -1]}${xor_binary_value[1]}"
+        # Padding value with 0 to 32 bits
+        local padding_length=$((32 - ${#xor_value}))
+        xor_value="${(l.${padding_length}..0.)}${xor_value}"
+        xor_value="${xor_value[2, -1]}${xor_value[1]}"
 
-        blocks=(${blocks} ${xor_binary_value})
+        # Append to block
+        blocks=(${blocks} ${xor_value})
     ; done
 
     echo ${blocks}
