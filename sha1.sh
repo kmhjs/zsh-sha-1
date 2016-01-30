@@ -166,7 +166,7 @@ function sha1::binary::mapping::step_mapping()
     esac
 
     # Convert into binary notation
-    result=$(echo $(([#2]${result})) | cut -d '#' -f 2)
+    result=$(converter::binary::from_integer ${result})
 
     # If padding is required, padding. Otherwise, trim.
     if [[ ${#result} -lt ${base_length} ]]; then
@@ -248,7 +248,7 @@ function sha1::binary::mapping::to_rotated_blocks()
         )
 
         # Compute rotation
-        local xor_value=$(echo $(([#2] ${base_values[1]} ^ ${base_values[2]} ^ ${base_values[3]} ^ ${base_values[4]})) | cut -d '#' -f 2)
+        local xor_value=$(converter::binary::from_integer $((${base_values[1]} ^ ${base_values[2]} ^ ${base_values[3]} ^ ${base_values[4]})))
 
         # Padding value with 0 to 32 bits
         local padding_length=$((32 - ${#xor_value}))
@@ -298,7 +298,7 @@ function sha1::binary::mapping::to_sha1_hex()
         local lhs="0b${base_internal_states[${i}]}"
         local rhs="0b${current_internal_states[${i}]}"
 
-        local result=$(echo $(([#2] ${lhs} + ${rhs})) | cut -d '#' -f 2)
+        local result=$(converter::binary::from_integer $((${lhs} + ${rhs})))
 
         # Shrink the number of bits in the result into 32-bits
         result="0b${result[-32, -1]}"
@@ -334,7 +334,7 @@ function sha1::binary::mapping::update_internal_states()
     lhs="0b${new_internal_states[5]}"
     rhs="0b${F}"
 
-    new_internal_states[5]=$(echo $(([#2] ${lhs} + ${rhs})) | cut -d '#' -f 2)
+    new_internal_states[5]=$(converter::binary::from_integer $((${lhs} + ${rhs})))
 
     # --- Computation related to 5-bits rotated A value
 
@@ -345,14 +345,14 @@ function sha1::binary::mapping::update_internal_states()
     lhs="0b${new_internal_states[5]}"
     rhs="0b${rot_A}"
 
-    new_internal_states[5]=$(echo $(([#2] ${lhs} + ${rhs})) | cut -d '#' -f 2)
+    new_internal_states[5]=$(converter::binary::from_integer $((${lhs} + ${rhs})))
 
     # --- Computation related to input block W value
 
     lhs="0b${new_internal_states[5]}"
     rhs="0b${input_block}"
 
-    new_internal_states[5]=$(echo $(([#2] ${lhs} + ${rhs})) | cut -d '#' -f 2)
+    new_internal_states[5]=$(converter::binary::from_integer $((${lhs} + ${rhs})))
 
     # --- Computation related to K value
 
@@ -362,7 +362,7 @@ function sha1::binary::mapping::update_internal_states()
     lhs="0b${new_internal_states[5]}"
     rhs="0b${K}"
 
-    new_internal_states[5]=$(echo $(([#2] ${lhs} + ${rhs})) | cut -d '#' -f 2)
+    new_internal_states[5]=$(converter::binary::from_integer $((${lhs} + ${rhs})))
 
     # --- Shrink computed value to 32-bits
     new_internal_states[5]=${${new_internal_states[5]}[-32,-1]}
