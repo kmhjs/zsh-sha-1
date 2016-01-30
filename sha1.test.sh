@@ -65,3 +65,11 @@ function test::sha1::binary::mapping::update_internal_states()
 function test::sha1::main()
 {
 }
+
+foreach function_name ($(cat ${0} | sed -n 's!^function  *test!test!p' | tr -d '()')); do
+    ${function_name}
+
+    if [[ ${?} != 0 ]]; then
+        echo "TEST FAILED: ${function_name} finished with invalid exit code." > /dev/stderr
+    fi
+; done
