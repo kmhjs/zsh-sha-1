@@ -2,13 +2,13 @@
 # Converters to integer
 #
 
-function converter::integer::from_char()
+function converter::decimal::from_char()
 {
     # This function converts input ascii char into integer value
     printf "%d" \'${1}
 }
 
-function converter::integer::from_binary()
+function converter::decimal::from_binary()
 {
     local input_value="0b${1}"
 
@@ -26,7 +26,7 @@ function converter::binary::from_hex()
     echo $(([#2]${input_value})) | cut -d '#' -f 2
 }
 
-function converter::binary::from_integer()
+function converter::binary::from_decimal()
 {
     local input_value=${1}
 
@@ -37,8 +37,8 @@ function converter::binary::from_char()
 {
     # This function converts input ascii char into 8-bits binary form
     local input_char=${1}
-    local ascii_value=$(converter::integer::from_char ${input_char})
-    local binary_string=$(converter::binary::from_integer ${ascii_value})
+    local ascii_value=$(converter::decimal::from_char ${input_char})
+    local binary_string=$(converter::binary::from_decimal ${ascii_value})
 
     [[ ${#binary_string} < 8 ]] && {
         local padding_length=$((8 - ${#binary_string}))
@@ -166,7 +166,7 @@ function sha1::binary::mapping::step_mapping()
     esac
 
     # Convert into binary notation
-    result=$(converter::binary::from_integer ${result})
+    result=$(converter::binary::from_decimal ${result})
 
     # If padding is required, padding. Otherwise, trim.
     if [[ ${#result} -lt ${base_length} ]]; then
@@ -202,7 +202,7 @@ function sha1::binary::mapping::to_blocks()
     for idx ({1..${#blocks}}); do
         # Compute original message length (number of bits), and append 64-bits padded binary data with 0
         local block=${blocks[${idx}]}
-        local block_length_binary=$(converter::binary::from_integer ${#block})
+        local block_length_binary=$(converter::binary::from_decimal ${#block})
         block_length_binary="${(l.$((${reserved_length} - ${#block_length_binary}))..0.)}${block_length_binary}"
 
         # If reached to the end of message
@@ -241,14 +241,14 @@ function sha1::binary::mapping::to_rotated_blocks()
     # Compute W16 to W80
     for idx ({16..79}); do
         local base_values=(
-            $(converter::integer::from_binary ${blocks[$((${idx} - 16 + 1))]})
-            $(converter::integer::from_binary ${blocks[$((${idx} - 14 + 1))]})
-            $(converter::integer::from_binary ${blocks[$((${idx} - 8 + 1))]})
-            $(converter::integer::from_binary ${blocks[$((${idx} - 3 + 1))]})
+            $(converter::decimal::from_binary ${blocks[$((${idx} - 16 + 1))]})
+            $(converter::decimal::from_binary ${blocks[$((${idx} - 14 + 1))]})
+            $(converter::decimal::from_binary ${blocks[$((${idx} - 8 + 1))]})
+            $(converter::decimal::from_binary ${blocks[$((${idx} - 3 + 1))]})
         )
 
         # Compute rotation
-        local xor_value=$(converter::binary::from_integer $((${base_values[1]} ^ ${base_values[2]} ^ ${base_values[3]} ^ ${base_values[4]})))
+        local xor_value=$(converter::binary::from_decimal $((${base_values[1]} ^ ${base_values[2]} ^ ${base_values[3]} ^ ${base_values[4]})))
 
         # Padding value with 0 to 32 bits
         local padding_length=$((32 - ${#xor_value}))
@@ -298,7 +298,7 @@ function sha1::binary::mapping::to_sha1_hex()
         local lhs="0b${base_internal_states[${i}]}"
         local rhs="0b${current_internal_states[${i}]}"
 
-        local result=$(converter::binary::from_integer $((${lhs} + ${rhs})))
+        local result=$(converter::binary::from_decimal $((${lhs} + ${rhs})))
 
         # Shrink the number of bits in the result into 32-bits
         result="0b${result[-32, -1]}"
@@ -334,7 +334,7 @@ function sha1::binary::mapping::update_internal_states()
     lhs="0b${new_internal_states[5]}"
     rhs="0b${F}"
 
-    new_internal_states[5]=$(converter::binary::from_integer $((${lhs} + ${rhs})))
+    new_internal_states[5]=$(converter::binary::from_decimal $((${lhs} + ${rhs})))
 
     # --- Computation related to 5-bits rotated A value
 
@@ -345,14 +345,14 @@ function sha1::binary::mapping::update_internal_states()
     lhs="0b${new_internal_states[5]}"
     rhs="0b${rot_A}"
 
-    new_internal_states[5]=$(converter::binary::from_integer $((${lhs} + ${rhs})))
+    new_internal_states[5]=$(converter::binary::from_decimal $((${lhs} + ${rhs})))
 
     # --- Computation related to input block W value
 
     lhs="0b${new_internal_states[5]}"
     rhs="0b${input_block}"
 
-    new_internal_states[5]=$(converter::binary::from_integer $((${lhs} + ${rhs})))
+    new_internal_states[5]=$(converter::binary::from_decimal $((${lhs} + ${rhs})))
 
     # --- Computation related to K value
 
@@ -362,7 +362,7 @@ function sha1::binary::mapping::update_internal_states()
     lhs="0b${new_internal_states[5]}"
     rhs="0b${K}"
 
-    new_internal_states[5]=$(converter::binary::from_integer $((${lhs} + ${rhs})))
+    new_internal_states[5]=$(converter::binary::from_decimal $((${lhs} + ${rhs})))
 
     # --- Shrink computed value to 32-bits
     new_internal_states[5]=${${new_internal_states[5]}[-32,-1]}
