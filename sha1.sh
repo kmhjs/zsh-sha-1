@@ -64,10 +64,12 @@ function sha1::binary::transformForStepID()
     local base_length=32
     local state=$(((${step_id} / 20) + 1))
 
+    local unsigned_inv_mask="0b${(l.${base_length}..1.)}"
+
     local result=""
     case ${state} in
         1)
-            result=$(((${in_b} & ${in_c}) | (~${in_b} & ${in_d})))
+            result=$(((${in_b} & ${in_c}) | ((${unsigned_inv_mask} - ${in_b}) & ${in_d})))
             ;;
         2)
             result=$((${in_b} ^ ${in_c} ^ ${in_d}))
@@ -248,7 +250,7 @@ function sha1::binary::block::combineAll()
 
     for idx ({1..${#splitted_blocks}}); do
         local splitted_block=${splitted_blocks[${idx}]}
-        current_internal_state=($(sha1::binary::block::updateInternalState ${idx} "${current_internal_state}" ${splitted_block}))
+        current_internal_state=($(sha1::binary::block::updateInternalState $((${idx} - 1)) "${current_internal_state}" ${splitted_block}))
     ; done
 
     echo ${current_internal_state}
