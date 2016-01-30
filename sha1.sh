@@ -224,11 +224,30 @@ function sha1::binary::block::computeRotatedBlocks()
     echo ${blocks}
 }
 
+# TODO: Change the function name
+function sha1::binary::block::combineAll()
+{
+    # - Inputs
+    #   - input_block (512 bits message block)
+    local base_internal_state=($(sha1::binary::baseInternalStates))
+    local current_internal_state=${base_internal_state}
+    local input_block=${1}
+
+    local splitted_blocks=($(sha1::binary::block::computeRotatedBlocks ${input_block}))
+
+    for idx ({1..${#splitted_blocks}}); do
+        local splitted_block=${splitted_blocks[${idx}]}
+        current_internal_state=($(sha1::binary::block::updateInternalState ${idx} "${current_internal_state}" ${splitted_block}))
+    ; done
+
+    echo ${current_internal_state}
+}
+
 function sha1::binary::block::updateInternalState()
 {
     local step_id=${1}
     local current_internal_states=($(echo ${2} | tr ' ' '\n'))
-    local input_blocks=${3}
+    local input_block=${3}
 
     local new_internal_states=(${current_internal_states})
     local step_constant=$(sha1::binary::constntForStepID ${step_id})
@@ -268,7 +287,7 @@ function sha1::binary::block::updateInternalState()
     # ---
 
     lhs="0b${new_internal_states[5]}"
-    rhs="0b${input_blocks[${step_id}]}"
+    rhs="0b${input_block}"
 
     result=$(echo $(([#2] ${lhs} + ${rhs})) | cut -d '#' -f 2)
 
@@ -297,3 +316,4 @@ function sha1::binary::block::updateInternalState()
 
     echo ${new_internal_states}
 }
+
