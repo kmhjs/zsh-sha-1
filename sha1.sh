@@ -1,17 +1,91 @@
-function sha1::integer::fromChar()
+#
+# Converters to integer
+#
+
+function converter::integer::from_char()
 {
     # This function converts input ascii char into integer value
     printf "%d" \'${1}
 }
 
-function sha1::integer::fromBinary()
+function converter::integer::from_binary()
 {
     local input_value="0b${1}"
 
     echo $((${input_value}))
 }
 
-function sha1::binary::baseInternalStates()
+#
+# Converters to binary
+#
+
+function converter::binary::from_hex()
+{
+    local input_value="0x${1}"
+
+    echo $(([#2]${input_value})) | cut -d '#' -f 2
+}
+
+function converter::binary::from_integer()
+{
+    local input_value=${1}
+
+    echo $(([#2]${input_value})) | cut -d '#' -f 2
+}
+
+function converter::binary::from_char()
+{
+    # This function converts input ascii char into 8-bits binary form
+    local input_char=${1}
+    local ascii_value=$(converter::integer::from_char ${input_char})
+    local binary_string=$(converter::binary::from_integer ${ascii_value})
+
+    [[ ${#binary_string} < 8 ]] && {
+        local padding_length=$((8 - ${#binary_string}))
+        local padding_string=${(l.${padding_length}..0.)}
+
+        binary_string="${padding_string}${binary_string}"
+    }
+
+    echo -n ${binary_string}
+}
+
+function converter::binary::from_string()
+{
+    # This function converts input string into binary form
+    local input_string=${1}
+    local binary_string=''
+
+    for idx ({1..${#input_string}}); do
+        binary_string="${binary_string}$(converter::binary::from_char ${input_string[${idx}]})"
+    ; done
+
+    echo -n ${binary_string}
+}
+
+function converter::binary::split()
+{
+    local input_binary_string=${1}
+    local block_length=${2}
+    local delimiter=${3}
+
+    local result_string=''
+
+    while [[ $((${#input_binary_string} - ${block_length})) > 0 ]]; do
+        result_string="${result_string}${delimiter}${input_binary_string[1,${block_length}]}"
+        input_binary_string="${input_binary_string[$((${block_length} + 1)), -1]}"
+    ; done
+
+    [[ ${#input_binary_string} != 0 ]] && result_string="${result_string}${delimiter}${input_binary_string}"
+
+    echo -n ${result_string[2, -1]}
+}
+
+#
+# Constants store
+#
+
+function sha1::binary::constant::initial_internal_states()
 {
     local base_length=32
     local states=(
@@ -24,7 +98,7 @@ function sha1::binary::baseInternalStates()
 
     local binary_states=()
     foreach s (${states}); do
-        local binary=$(sha1::binary::fromHex ${s})
+        local binary=$(converter::binary::from_hex ${s})
         local padding_length=$((${base_length} - ${#binary}))
         binary="${(l.${padding_length}..0.)}${binary}"
         binary_states=(${binary_states} ${binary})
@@ -33,7 +107,7 @@ function sha1::binary::baseInternalStates()
     echo -n ${binary_states}
 }
 
-function sha1::binary::constntForStepID()
+function sha1::binary::constant::step_coef()
 {
     local step_id=${1}
 
@@ -47,14 +121,18 @@ function sha1::binary::constntForStepID()
 
     local state=${states[$(((${step_id} / 20) + 1))]}
 
-    local binary=$(sha1::binary::fromHex ${state})
+    local binary=$(converter::binary::from_hex ${state})
     local padding_length=$((${base_length} - ${#binary}))
     binary="${(l.${padding_length}..0.)}${binary}"
 
     echo -n ${binary}
 }
 
-function sha1::binary::transformForStepID()
+#
+# Mapping function
+#
+
+function sha1::binary::mapping::step_mapping()
 {
     local step_id=${1}
     local in_b="0b${2}"
@@ -94,91 +172,25 @@ function sha1::binary::transformForStepID()
     echo -n ${result}
 }
 
-function sha1::binary::fromHex()
-{
-    local input_value="0x${1}"
+#
+# Binary split functions
+#
 
-    echo $(([#2]${input_value})) | cut -d '#' -f 2
-}
-
-function sha1::binary::fromInteger()
-{
-    local input_value=${1}
-
-    echo $(([#2]${input_value})) | cut -d '#' -f 2
-}
-
-function sha1::binary::fromChar()
-{
-    # This function converts input ascii char into 8-bits binary form
-    local input_char=${1}
-    local ascii_value=$(sha1::integer::fromChar ${input_char})
-    local binary_string=$(sha1::binary::fromInteger ${ascii_value})
-
-    [[ ${#binary_string} < 8 ]] && {
-        local padding_length=$((8 - ${#binary_string}))
-        local padding_string=${(l.${padding_length}..0.)}
-
-        binary_string="${padding_string}${binary_string}"
-    }
-
-    echo -n ${binary_string}
-}
-
-function sha1::binary::fromString()
-{
-    # This function converts input string into binary form
-    local input_string=${1}
-    local binary_string=''
-
-    for idx ({1..${#input_string}}); do
-        binary_string="${binary_string}$(sha1::binary::fromChar ${input_string[${idx}]})"
-    ; done
-
-    echo -n ${binary_string}
-}
-
-function sha1::binary::appendOne()
-{
-    # This function appends 1 in the tail of input
-    local binary_string=${1}
-
-    echo -n "${binary_string}1"
-}
-
-function sha1::binary::splitIntoBitBlocks()
-{
-    local input_binary_string=${1}
-    local block_length=${2}
-    local delimiter=${3}
-
-    local result_string=''
-
-    while [[ $((${#input_binary_string} - ${block_length})) > 0 ]]; do
-        result_string="${result_string}${delimiter}${input_binary_string[1,${block_length}]}"
-        input_binary_string="${input_binary_string[$((${block_length} + 1)), -1]}"
-    ; done
-
-    [[ ${#input_binary_string} != 0 ]] && result_string="${result_string}${delimiter}${input_binary_string}"
-
-    echo -n ${result_string[2, -1]}
-}
-
-function sha1::binary::createBlocks()
+function sha1::binary::mapping::to_blocks()
 {
     # Zero-padding & Append footer
     local base_length=512
     local reserved_length=64
     local input_binary_string=${1}
     local data_length=$((${base_length} - ${reserved_length}))
-    local blocks=($(sha1::binary::splitIntoBitBlocks ${input_binary_string} ${data_length} ' '))
+    local blocks=($(converter::binary::split ${input_binary_string} ${data_length} ' '))
 
     local result_blocks=''
     local delimiter=' '
 
     for idx ({1..${#blocks}}); do
         local block=${blocks[${idx}]}
-        local block_length_binary=$(sha1::binary::fromInteger ${#block})
+        local block_length_binary=$(converter::binary::from_integer ${#block})
         block_length_binary="${(l.$((${reserved_length} - ${#block_length_binary}))..0.)}${block_length_binary}"
 
         [[ ${idx} == ${#blocks} ]] && {
@@ -196,18 +208,22 @@ function sha1::binary::createBlocks()
     echo -n ${result_blocks[2, -1]}
 }
 
-function sha1::binary::block::computeRotatedBlocks()
+#
+# SHA-1 specific computations
+#
+
+function sha1::binary::mapping::to_rotated_blocks()
 {
     # This method computes W16 to W80
     local input_block=${1}
-    local blocks=($(sha1::binary::splitIntoBitBlocks ${input_block} 32 ' '))
+    local blocks=($(converter::binary::split ${input_block} 32 ' '))
 
     for idx ({16..79}); do
         local base_values=(
-            $(sha1::integer::fromBinary ${blocks[$((${idx} - 16 + 1))]})
-            $(sha1::integer::fromBinary ${blocks[$((${idx} - 14 + 1))]})
-            $(sha1::integer::fromBinary ${blocks[$((${idx} - 8 + 1))]})
-            $(sha1::integer::fromBinary ${blocks[$((${idx} - 3 + 1))]})
+            $(converter::integer::from_binary ${blocks[$((${idx} - 16 + 1))]})
+            $(converter::integer::from_binary ${blocks[$((${idx} - 14 + 1))]})
+            $(converter::integer::from_binary ${blocks[$((${idx} - 8 + 1))]})
+            $(converter::integer::from_binary ${blocks[$((${idx} - 3 + 1))]})
         )
 
         local xor_value=${base_values[1]}
@@ -215,7 +231,7 @@ function sha1::binary::block::computeRotatedBlocks()
             xor_value=$((${xor_value} ^ ${base_values[${i}]}))
         ; done
 
-        local xor_binary_value=$(sha1::binary::fromInteger ${xor_value})
+        local xor_binary_value=$(converter::binary::from_integer ${xor_value})
         local padding_length=$((32 - ${#xor_binary_value}))
         xor_binary_value="${(l.${padding_length}..0.)}${xor_binary_value}"
         xor_binary_value="${xor_binary_value[2, -1]}${xor_binary_value[1]}"
@@ -226,38 +242,26 @@ function sha1::binary::block::computeRotatedBlocks()
     echo ${blocks}
 }
 
-function sha1::main()
-{
-    local input_string=${1}
-    local binary_input_string=$(sha1::binary::fromString "${input_string}")
-    local splitted_blocks=($(sha1::binary::createBlocks ${binary_input_string}))
-
-    foreach block (${splitted_blocks}); do
-        sha1::binary::block::combineAll ${block}
-    ; done
-}
-
-# TODO: Change the function name
-function sha1::binary::block::combineAll()
+function sha1::binary::mapping::to_sha1_hex()
 {
     # - Inputs
     #   - input_block (512 bits message block)
-    local base_internal_state=($(sha1::binary::baseInternalStates))
-    local current_internal_state=${base_internal_state}
+    local base_internal_states=($(sha1::binary::constant::initial_internal_states))
+    local current_internal_states=${base_internal_states}
     local input_block=${1}
 
-    local splitted_blocks=($(sha1::binary::block::computeRotatedBlocks ${input_block}))
+    local splitted_blocks=($(sha1::binary::mapping::to_rotated_blocks ${input_block}))
 
     for idx ({1..${#splitted_blocks}}); do
         local splitted_block=${splitted_blocks[${idx}]}
-        current_internal_state=($(sha1::binary::block::updateInternalState $((${idx} - 1)) "${current_internal_state}" ${splitted_block}))
+        current_internal_states=($(sha1::binary::mapping::update_internal_states $((${idx} - 1)) "${current_internal_states}" ${splitted_block}))
     ; done
 
     local hex_result=()
 
     for i ({1..5}); do
-        local lhs="0b${base_internal_state[${i}]}"
-        local rhs="0b${current_internal_state[${i}]}"
+        local lhs="0b${base_internal_states[${i}]}"
+        local rhs="0b${current_internal_states[${i}]}"
 
         local result=$(echo $(([#2] ${lhs} + ${rhs})) | cut -d '#' -f 2)
 
@@ -269,16 +273,16 @@ function sha1::binary::block::combineAll()
     echo ${hex_result}
 }
 
-function sha1::binary::block::updateInternalState()
+function sha1::binary::mapping::update_internal_states()
 {
     local step_id=${1}
     local current_internal_states=($(echo ${2} | tr ' ' '\n'))
     local input_block=${3}
 
     local new_internal_states=(${current_internal_states})
-    local step_constant=$(sha1::binary::constntForStepID ${step_id})
+    local step_constant=$(sha1::binary::constant::step_coef ${step_id})
 
-    local result=$(sha1::binary::transformForStepID \
+    local result=$(sha1::binary::mapping::step_mapping \
                   ${step_id} \
                   ${current_internal_states[2]} \
                   ${current_internal_states[3]} \
@@ -337,3 +341,13 @@ function sha1::binary::block::updateInternalState()
     echo ${new_internal_states}
 }
 
+function sha1::main()
+{
+    local input_string=${1}
+    local binary_input_string=$(converter::binary::from_string "${input_string}")
+    local splitted_blocks=($(sha1::binary::mapping::to_blocks ${binary_input_string}))
+
+    foreach block (${splitted_blocks}); do
+        sha1::binary::mapping::to_sha1_hex ${block}
+    ; done
+}
