@@ -2,138 +2,66 @@
 
 source './sha1.sh'
 
-function test::sha1::integer::fromChar()
+function test::converter::decimal::from_char()
 {
-    local result=$(sha1::integer::fromChar 'a')
-
-    [[ ${result} == 97 ]] && return 0 || return 1
 }
 
-function test::sha1::integer::fromBinary()
+function test::converter::decimal::from_binary()
 {
-    local result=$(sha1::integer::fromBinary '1010')
-
-    [[ ${result} == 10 ]] && return 0 || return 1
 }
 
-function test::sha1::binary::baseInternalStates()
+function test::converter::hex::from_binary()
 {
-    local result=$(sha1::binary::baseInternalStates)
-    local expected_result_blocks="01100111010001010010001100000001 11101111110011011010101110001001 10011000101110101101110011111110 00010000001100100101010001110110 11000011110100101110000111110000"
-
-    [[ "${result}" == "${expected_result_blocks}" ]] && return 0 || return 1
 }
 
-function test::sha1::binary::constntForStepID()
+function test::converter::binary::from_hex()
 {
-    local current_state=$(sha1::binary::constntForStepID 0)
-    local last_state
-
-    for i ({2..80}); do
-        last_state=${current_state}
-        current_state=$(sha1::binary::constntForStepID $((${i} - 1)))
-
-        if [[ $(((${i} % 20) - 1)) == 0 && ${i} > 10 ]]; then
-            if [[ "${last_state}" == "${current_state}" ]]; then
-                echo "foo"
-                return 1
-            ; fi
-        ; else ;
-            if [[ "${last_state}" != "${current_state}" ]]; then
-                return 1
-            ; fi
-        fi
-    ; done
-
-    return 0
 }
 
-function test::sha1::binary::transformForStepID()
+function test::converter::binary::from_decimal()
 {
-    local result=$(sha1::binary::transformForStepID \
-                   24 \
-                   10010100101001010001010101001010\
-                   00101001010010100101001010100101\
-                   11010101001010010100101110100101)
-
-    [[ "${result}" == "01101000110001100000110001001010" ]] && return 0 || return 1
 }
 
-function test::sha1::binary::fromHex()
+function test::converter::binary::from_char()
 {
-    local result=$(sha1::binary::fromHex 'ff')
-
-    [[ "${result}" == "11111111" ]] && return 0 || return 1
 }
 
-function test::sha1::binary::fromInteger()
+function test::converter::binary::from_string()
 {
-    local result=$(sha1::binary::fromInteger 97)
-
-    [[ "${result}" == "1100001" ]] && return 0 || return 1
 }
 
-function test::sha1::binary::fromChar()
+function test::converter::binary::split()
 {
-    local result=$(sha1::binary::fromChar 'a')
-
-    [[ "${result}" == "01100001" ]] && return 0 || return 1
 }
 
-function test::sha1::binary::fromString()
+function test::sha1::binary::constant::initial_internal_states()
 {
-    local result=$(sha1::binary::fromString 'Hello world')
-
-    [[ "${result}" == "0100100001100101011011000110110001101111001000000111011101101111011100100110110001100100" ]] && return 0 || return 1
 }
 
-function test::sha1::binary::appendOne()
+function test::sha1::binary::constant::step_coef()
 {
-    local result=$(sha1::binary::appendOne '00000000')
-
-    [[ "${result}" == "000000001" ]] && return 0 || return 1
 }
 
-function test::sha1::binary::splitIntoBitBlocks()
+function test::sha1::binary::mapping::step_mapping()
 {
-    local block_length=16
-    local input_sample=${(l.33..0.)}
-    local delimiter=' '
-
-    local result=$(sha1::binary::splitIntoBitBlocks ${input_sample} ${block_length} ${delimiter})
-
-    [[ "${result}" == "${(l.16..0.)} ${(l.16..0.)} ${(l.1..0.)}" ]] && return 0 || return 1
 }
 
-function test::sha1::binary::createBlocks()
+function test::sha1::binary::mapping::to_blocks()
 {
-    local data_length=$((512 - 64))
-    local input_sample=${(l.$((${data_length} + 1))..0.)}
-
-    local result=$(sha1::binary::createBlocks ${input_sample})
-
-    local expected_result_blocks=(
-        "${(l.${data_length}..0.)}${(l.55..0.)}111000000"
-        "01${(l.$((${data_length} - 2))..0.)}${(l.63..0.)}1"
-    )
-
-    [[ "${result}" == "${expected_result_blocks[1]} ${expected_result_blocks[2]}" ]] && return 0 || return 1
 }
 
-function test::sha1::binary::computeRotatedBlocks()
+function test::sha1::binary::mapping::to_rotated_blocks()
 {
-    local input_sample="11${(l.128..0.)}${(l.128..1.)}${(l.128..0.)}${(l.126..1.)}"
-    local expected_result_blocks='11000000000000000000000000000000 00000000000000000000000000000000 00000000000000000000000000000000 00000000000000000000000000000000 00111111111111111111111111111111 11111111111111111111111111111111 11111111111111111111111111111111 11111111111111111111111111111111 11000000000000000000000000000000 00000000000000000000000000000000 00000000000000000000000000000000 00000000000000000000000000000000 00111111111111111111111111111111 11111111111111111111111111111111 11111111111111111111111111111111 11111111111111111111111111111111 11111111111111111111111111111111 11111111111111111111111111111111 10000000000000000000000000000001 00000000000000000000000000000000 00000000000000000000000000000000 11111111111111111111111111111100 10000000000000000000000000000001 00000000000000000000000000000000 10000000000000000000000000000111 11111111111111111111111111111100 01111111111111111111111111111101 11111111111111111111111111110000 01111111111111111111111111111000 00000000000000000000000000000011 11111111111111111111111111100010 11111111111111111111111111110000 11111111111111111111111111110101 11111111111111111111111111000011 00000000000000000000000000011000 11111111111111111111111111110011 00000000000000000000000001110100 11111111111111111111111111001111 00000000000000000000000000101110 00000000000000000000000011110000 11111111111111111111111110000001 11111111111111111111111111000011 00000000000000000000000111011010 11111111111111111111111100000011 11111111111111111111111101011010 00000000000000000000001111001100 11111111111111111111111001110101 11111111111111111111111100110011 00000000000000000000011101000000 00000000000000000000001100001100 11111111111111111111110100001011 11111111111111111111000011111111 11111111111111111111100000011001 00000000000000000000001111110000 11111111111111111110001001001011 11111111111111111111000000110011 11111111111111111111010111010111 11111111111111111100001100001111 11111111111111111110011101110001 11111111111111111111001111001111 00000000000000000111010001110010 00000000000000000011000011111100 11111111111111111101000101100011 00000000000000001111000011111100 00000000000000000111111011000000 11111111111111111100001100111111 11111111111111100010010100111111 00000000000000001111110000000000 11111111111111110101101000111111 00000000000000111100110000000000 11111111111111100111010111111111 11111111111111110011001111111111 00000000000001110100000011001100 00000000000000110000110000000000 11111111111111010000101110000111 11111111111100001111111111111111 00000000000001111110011001011100 11111111111111000000111100001111 11111111111000100100101101000111 00000000000011111100110011000000'
-
-    local result=$(sha1::binary::block::computeRotatedBlocks ${input_sample})
-
-    [[ "${result}" == "${expected_result_blocks}" ]] && return 0 || return 1
 }
 
-foreach function_name ($(cat ${0} | sed -n 's!^function  *test!test!p' | tr -d '()')); do
-    ${function_name}
-
-    [[ ${?} != 0 ]] && {
-    echo "TEST FAILED: ${function_name} finished with invalid exit code." > /dev/stderr
+function test::sha1::binary::mapping::to_sha1_hex()
+{
 }
-; done
+
+function test::sha1::binary::mapping::update_internal_states()
+{
+}
+
+function test::sha1::main()
+{
+}
