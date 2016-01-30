@@ -10,12 +10,12 @@ This project is to implement SHA-1 algorithm in Z-shell.
 
 ## Usage
 
-`
+```
 target_string='Input string'
 
 source sha1.sh
 sha1::main ${target_string}
-`
+```
 
 ## References
 
