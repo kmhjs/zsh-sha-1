@@ -226,7 +226,74 @@ function sha1::binary::block::computeRotatedBlocks()
 
 function sha1::binary::block::updateInternalState()
 {
-    local current_internal_states=(${1})
+    local step_id=${1}
+    local current_internal_states=($(echo ${2} | tr ' ' '\n'))
+    local input_blocks=${3}
 
+    local new_internal_states=(${current_internal_states})
+    local step_constant=$(sha1::binary::constntForStepID ${step_id})
 
+    local result=$(sha1::binary::transformForStepID \
+                  ${step_id} \
+                  ${current_internal_states[2]} \
+                  ${current_internal_states[3]} \
+                  ${current_internal_states[4]})
+
+    local lhs=0
+    local rhs=0
+
+    # ---
+
+    lhs="0b${new_internal_states[5]}"
+    rhs="0b${result}"
+
+    result=$(echo $(([#2] ${lhs} + ${rhs})) | cut -d '#' -f 2)
+
+    result="${(l.$((32 - ${#result}))..0.)}${result}"
+    new_internal_states[5]=${result[-32,-1]}
+
+    # ---
+
+    result=${current_internal_states[1]}
+    result="${result[6, -1]}${result[1, 5]}"
+
+    lhs="0b${new_internal_states[5]}"
+    rhs="0b${result}"
+
+    result=$(echo $(([#2] ${lhs} + ${rhs})) | cut -d '#' -f 2)
+
+    result="${(l.$((32 - ${#result}))..0.)}${result}"
+    new_internal_states[5]=${result[-32,-1]}
+
+    # ---
+
+    lhs="0b${new_internal_states[5]}"
+    rhs="0b${input_blocks[${step_id}]}"
+
+    result=$(echo $(([#2] ${lhs} + ${rhs})) | cut -d '#' -f 2)
+
+    result="${(l.$((32 - ${#result}))..0.)}${result}"
+    new_internal_states[5]=${result[-32,-1]}
+
+    # ---
+
+    lhs="0b${new_internal_states[5]}"
+    rhs="0b${step_constant}"
+
+    result=$(echo $(([#2] ${lhs} + ${rhs})) | cut -d '#' -f 2)
+
+    result="${(l.$((32 - ${#result}))..0.)}${result}"
+    new_internal_states[5]=${result[-32,-1]}
+
+    # ---
+
+    result=${current_internal_states[2]}
+
+    new_internal_states[1]=${new_internal_states[5]}
+    new_internal_states[2]=${current_internal_states[1]}
+    new_internal_states[3]="${result[31, 32]}${result[1, 30]}"
+    new_internal_states[4]=${current_internal_states[3]}
+    new_internal_states[5]=${current_internal_states[4]}
+
+    echo ${new_internal_states}
 }
