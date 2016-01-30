@@ -5,6 +5,7 @@
 function converter::decimal::from_char()
 {
     # This function converts input ascii char into integer value
+    # TODO: Find Char -> ASCII convert method without printf.
     printf "%d" \'${1}
 }
 
@@ -22,8 +23,9 @@ function converter::decimal::from_binary()
 function converter::hex::from_binary()
 {
     local input_value="0b${1}"
+    local results=(${(s:#:)$(([#16] ${input_value}))})
 
-    echo $(([#16] ${input_value})) | cut -d '#' -f 2
+    echo ${results[2]}
 }
 
 #
@@ -33,15 +35,17 @@ function converter::hex::from_binary()
 function converter::binary::from_hex()
 {
     local input_value="0x${1}"
+    local results=(${(s:#:)$(([#2] ${input_value}))})
 
-    echo $(([#2]${input_value})) | cut -d '#' -f 2
+    echo ${results[2]}
 }
 
 function converter::binary::from_decimal()
 {
     local input_value=${1}
+    local results=(${(s:#:)$(([#2] ${input_value}))})
 
-    echo $(([#2]${input_value})) | cut -d '#' -f 2
+    echo ${results[2]}
 }
 
 function converter::binary::from_char()
@@ -324,7 +328,7 @@ function sha1::binary::mapping::to_sha1_hex()
 function sha1::binary::mapping::update_internal_states()
 {
     local step_id=${1}
-    local current_internal_states=($(echo ${2} | tr ' ' '\n'))
+    local current_internal_states=($(echo ${2}))
     local input_block=${3}
 
     # Initialize next internal states array
