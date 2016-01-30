@@ -16,6 +16,17 @@ function converter::decimal::from_binary()
 }
 
 #
+# Converters to hex
+#
+
+function converter::hex::from_binary()
+{
+    local input_value="0b${1}"
+
+    echo $(([#16] ${input_value})) | cut -d '#' -f 2
+}
+
+#
 # Converters to binary
 #
 
@@ -301,10 +312,10 @@ function sha1::binary::mapping::to_sha1_hex()
         local result=$(converter::binary::from_decimal $((${lhs} + ${rhs})))
 
         # Shrink the number of bits in the result into 32-bits
-        result="0b${result[-32, -1]}"
+        result="${result[-32, -1]}"
 
         # Store to results array in hex notation
-        hex_result=(${hex_result} $(echo $(([#16] ${result})) | cut -d '#' -f 2))
+        hex_result=(${hex_result} $(converter::hex::from_binary ${result}))
     ; done
 
     echo ${hex_result}
