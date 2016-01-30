@@ -1,5 +1,5 @@
 #
-# Converters to integer
+# Converters to decimal
 #
 
 function converter::decimal::from_char()
