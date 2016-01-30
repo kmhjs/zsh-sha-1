@@ -246,27 +246,44 @@ function sha1::binary::mapping::to_sha1_hex()
 {
     # - Inputs
     #   - input_block (512 bits message block)
+
+    # Obtain initial internal states and initialize
     local base_internal_states=($(sha1::binary::constant::initial_internal_states))
     local current_internal_states=${base_internal_states}
     local input_block=${1}
 
+    # Convert (and split) input 512-bits binary string into 80 of 32-bits blocks for each step
     local splitted_blocks=($(sha1::binary::mapping::to_rotated_blocks ${input_block}))
 
-    for idx ({1..${#splitted_blocks}}); do
+    # Process each steps (80 steps in total)
+    for idx ({1..80}); do
+        # Obtain partial converted block
         local splitted_block=${splitted_blocks[${idx}]}
-        current_internal_states=($(sha1::binary::mapping::update_internal_states $((${idx} - 1)) "${current_internal_states}" ${splitted_block}))
+
+        # Prepare current step ID (step ID is 0-origin)
+        local step_id=$((${idx} - 1))
+
+        # Update internal states
+        current_internal_states=($(sha1::binary::mapping::update_internal_states \
+                                   ${step_id} \
+                                   "${current_internal_states}" \
+                                   ${splitted_block}))
     ; done
 
     local hex_result=()
 
+    # Finish up the SHA-1 value
     for i ({1..5}); do
+        # Add initial state value to current state value
         local lhs="0b${base_internal_states[${i}]}"
         local rhs="0b${current_internal_states[${i}]}"
 
         local result=$(echo $(([#2] ${lhs} + ${rhs})) | cut -d '#' -f 2)
 
+        # Shrink the number of bits in the result into 32-bits
         result="0b${result[-32, -1]}"
 
+        # Store to results array in hex notation
         hex_result=(${hex_result} $(echo $(([#16] ${result})) | cut -d '#' -f 2))
     ; done
 
