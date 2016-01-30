@@ -279,62 +279,65 @@ function sha1::binary::mapping::update_internal_states()
     local current_internal_states=($(echo ${2} | tr ' ' '\n'))
     local input_block=${3}
 
+    # Initialize next internal states array
     local new_internal_states=(${current_internal_states})
-    local step_constant=$(sha1::binary::constant::step_coef ${step_id})
-
-    local result=$(sha1::binary::mapping::step_mapping \
-                  ${step_id} \
-                  ${current_internal_states[2]} \
-                  ${current_internal_states[3]} \
-                  ${current_internal_states[4]})
 
     local lhs=0
     local rhs=0
 
-    # ---
+    # --- Computation related to F value
+
+    # Compute F value for step value and internal states
+    local F=$(sha1::binary::mapping::step_mapping \
+              ${step_id} \
+              ${current_internal_states[2]} \
+              ${current_internal_states[3]} \
+              ${current_internal_states[4]})
 
     lhs="0b${new_internal_states[5]}"
-    rhs="0b${result}"
+    rhs="0b${F}"
 
-    result=$(echo $(([#2] ${lhs} + ${rhs})) | cut -d '#' -f 2)
-    new_internal_states[5]=${result}
+    new_internal_states[5]=$(echo $(([#2] ${lhs} + ${rhs})) | cut -d '#' -f 2)
 
-    # ---
+    # --- Computation related to 5-bits rotated A value
 
-    result=${current_internal_states[1]}
-    result="${result[6, -1]}${result[1, 5]}"
+    # Compute 5-bit left rotation
+    local rot_A=${current_internal_states[1]}
+    rot_A="${rot_A[6, -1]}${rot_A[1, 5]}"
 
     lhs="0b${new_internal_states[5]}"
-    rhs="0b${result}"
+    rhs="0b${rot_A}"
 
-    result=$(echo $(([#2] ${lhs} + ${rhs})) | cut -d '#' -f 2)
-    new_internal_states[5]=${result}
+    new_internal_states[5]=$(echo $(([#2] ${lhs} + ${rhs})) | cut -d '#' -f 2)
 
-    # ---
+    # --- Computation related to input block W value
 
     lhs="0b${new_internal_states[5]}"
     rhs="0b${input_block}"
 
-    result=$(echo $(([#2] ${lhs} + ${rhs})) | cut -d '#' -f 2)
-    new_internal_states[5]=${result}
+    new_internal_states[5]=$(echo $(([#2] ${lhs} + ${rhs})) | cut -d '#' -f 2)
 
-    # ---
+    # --- Computation related to K value
+
+    # Obtain step constant (K value) for current step ID
+    local K=$(sha1::binary::constant::step_coef ${step_id})
 
     lhs="0b${new_internal_states[5]}"
-    rhs="0b${step_constant}"
+    rhs="0b${K}"
 
-    result=$(echo $(([#2] ${lhs} + ${rhs})) | cut -d '#' -f 2)
+    new_internal_states[5]=$(echo $(([#2] ${lhs} + ${rhs})) | cut -d '#' -f 2)
 
-    result="${(l.$((32 - ${#result}))..0.)}${result}"
-    new_internal_states[5]=${result[-32,-1]}
+    # --- Shrink computed value to 32-bits
+    new_internal_states[5]=${${new_internal_states[5]}[-32,-1]}
 
-    # ---
+    # --- Computation related to 30-bits rotated B value
+    local rot_B=${current_internal_states[2]}
+    rot_B="${rot_B[31, 32]}${rot_B[1, 30]}"
 
-    result=${current_internal_states[2]}
-
+    # --- Remapping of current states
     new_internal_states[1]=${new_internal_states[5]}
     new_internal_states[2]=${current_internal_states[1]}
-    new_internal_states[3]="${result[31, 32]}${result[1, 30]}"
+    new_internal_states[3]=${rot_B}
     new_internal_states[4]=${current_internal_states[3]}
     new_internal_states[5]=${current_internal_states[4]}
 
