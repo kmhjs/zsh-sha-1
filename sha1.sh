@@ -253,16 +253,20 @@ function sha1::binary::block::combineAll()
         current_internal_state=($(sha1::binary::block::updateInternalState $((${idx} - 1)) "${current_internal_state}" ${splitted_block}))
     ; done
 
+    local hex_result=()
+
     for i ({1..5}); do
         local lhs="0b${base_internal_state[${i}]}"
         local rhs="0b${current_internal_state[${i}]}"
 
         local result=$(echo $(([#2] ${lhs} + ${rhs})) | cut -d '#' -f 2)
 
-        current_internal_state[${i}]=${result[-32, -1]}
+        result="0b${result[-32, -1]}"
+
+        hex_result=(${hex_result} $(echo $(([#16] ${result})) | cut -d '#' -f 2))
     ; done
 
-    echo ${current_internal_state}
+    echo ${hex_result}
 }
 
 function sha1::binary::block::updateInternalState()
