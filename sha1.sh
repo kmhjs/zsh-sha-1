@@ -253,6 +253,15 @@ function sha1::binary::block::combineAll()
         current_internal_state=($(sha1::binary::block::updateInternalState $((${idx} - 1)) "${current_internal_state}" ${splitted_block}))
     ; done
 
+    for i ({1..5}); do
+        local lhs="0b${base_internal_state[${i}]}"
+        local rhs="0b${current_internal_state[${i}]}"
+
+        local result=$(echo $(([#2] ${lhs} + ${rhs})) | cut -d '#' -f 2)
+
+        current_internal_state[${i}]=${result[-32, -1]}
+    ; done
+
     echo ${current_internal_state}
 }
 
@@ -280,9 +289,7 @@ function sha1::binary::block::updateInternalState()
     rhs="0b${result}"
 
     result=$(echo $(([#2] ${lhs} + ${rhs})) | cut -d '#' -f 2)
-
-    result="${(l.$((32 - ${#result}))..0.)}${result}"
-    new_internal_states[5]=${result[-32,-1]}
+    new_internal_states[5]=${result}
 
     # ---
 
@@ -293,9 +300,7 @@ function sha1::binary::block::updateInternalState()
     rhs="0b${result}"
 
     result=$(echo $(([#2] ${lhs} + ${rhs})) | cut -d '#' -f 2)
-
-    result="${(l.$((32 - ${#result}))..0.)}${result}"
-    new_internal_states[5]=${result[-32,-1]}
+    new_internal_states[5]=${result}
 
     # ---
 
@@ -303,9 +308,7 @@ function sha1::binary::block::updateInternalState()
     rhs="0b${input_block}"
 
     result=$(echo $(([#2] ${lhs} + ${rhs})) | cut -d '#' -f 2)
-
-    result="${(l.$((32 - ${#result}))..0.)}${result}"
-    new_internal_states[5]=${result[-32,-1]}
+    new_internal_states[5]=${result}
 
     # ---
 
