@@ -2,6 +2,7 @@
 # Converters to decimal
 #
 
+# Char -> Decimal
 function converter::decimal::from_char()
 {
     # This function converts input ascii char into integer value
@@ -9,6 +10,7 @@ function converter::decimal::from_char()
     printf "%d" \'${1}
 }
 
+# Binary string -> Decimal
 function converter::decimal::from_binary()
 {
     local input_value="0b${1}"
@@ -20,6 +22,7 @@ function converter::decimal::from_binary()
 # Converters to hex
 #
 
+# Binary string -> Hex
 function converter::hex::from_binary()
 {
     local input_value="0b${1}"
@@ -32,6 +35,7 @@ function converter::hex::from_binary()
 # Converters to binary
 #
 
+# Hex -> Binary string
 function converter::binary::from_hex()
 {
     local input_value="0x${1}"
@@ -40,6 +44,7 @@ function converter::binary::from_hex()
     echo ${results[2]}
 }
 
+# Decimal -> Binary string
 function converter::binary::from_decimal()
 {
     local input_value=${1}
@@ -48,6 +53,7 @@ function converter::binary::from_decimal()
     echo ${results[2]}
 }
 
+# Char -> Binary string
 function converter::binary::from_char()
 {
     # This function converts input ascii char into 8-bits binary form
@@ -65,6 +71,7 @@ function converter::binary::from_char()
     echo -n ${binary_string}
 }
 
+# String ([Char]) -> Binary string
 function converter::binary::from_string()
 {
     # This function converts input string into binary form
@@ -78,6 +85,7 @@ function converter::binary::from_string()
     echo -n ${binary_string}
 }
 
+# Binary string, Decimal, Char -> [Binary string (block_length-bits)]
 function converter::binary::split()
 {
     local input_binary_string=${1}
@@ -100,6 +108,7 @@ function converter::binary::split()
 # Constants store
 #
 
+# -> [Binary string (32-bits)]
 function sha1::binary::constant::initial_internal_states()
 {
     local base_length=32
@@ -122,6 +131,7 @@ function sha1::binary::constant::initial_internal_states()
     echo -n ${binary_states}
 }
 
+# Decimal (0 - 79) -> Binary string (32-bits)
 function sha1::binary::constant::step_coef()
 {
     local step_id=${1}
@@ -147,6 +157,7 @@ function sha1::binary::constant::step_coef()
 # Mapping function
 #
 
+# Decimal (0 - 79), Binary string (32-bits), Binary string (32-bits), Binary string (32-bits) -> Binary string (32-bits)
 function sha1::binary::mapping::step_mapping()
 {
     local step_id=${1}
@@ -199,6 +210,7 @@ function sha1::binary::mapping::step_mapping()
 # Binary split functions
 #
 
+# String -> [Binary string (512-bits)]
 function sha1::binary::mapping::to_blocks()
 {
     # Zero-padding & Append footer
@@ -245,6 +257,7 @@ function sha1::binary::mapping::to_blocks()
 # SHA-1 specific computations
 #
 
+# Binary string (512-bits) -> [Binary string (32-bits)]
 function sha1::binary::mapping::to_rotated_blocks()
 {
     # This method computes W16 to W80
@@ -277,11 +290,9 @@ function sha1::binary::mapping::to_rotated_blocks()
     echo ${blocks}
 }
 
+# Binary string (512-bits) -> [Hex]
 function sha1::binary::mapping::to_sha1_hex()
 {
-    # - Inputs
-    #   - input_block (512 bits message block)
-
     # Obtain initial internal states and initialize
     local base_internal_states=($(sha1::binary::constant::initial_internal_states))
     local current_internal_states=${base_internal_states}
@@ -325,6 +336,7 @@ function sha1::binary::mapping::to_sha1_hex()
     echo ${hex_result}
 }
 
+# Decimal (0 - 79), [Binary string (32-bits)], Binary string (32-bits) -> [Binary string (32-bits)]
 function sha1::binary::mapping::update_internal_states()
 {
     local step_id=${1}
@@ -396,13 +408,18 @@ function sha1::binary::mapping::update_internal_states()
     echo ${new_internal_states}
 }
 
+# String -> Hex
 function sha1::main()
 {
     local input_string=${1}
     local binary_input_string=$(converter::binary::from_string "${input_string}")
     local splitted_blocks=($(sha1::binary::mapping::to_blocks ${binary_input_string}))
 
+    local result=''
+
     foreach block (${splitted_blocks}); do
-        sha1::binary::mapping::to_sha1_hex ${block}
+        result="${result}$(sha1::binary::mapping::to_sha1_hex ${block})"
     ; done
+
+    echo ${result// /}
 }
