@@ -224,6 +224,17 @@ function sha1::binary::block::computeRotatedBlocks()
     echo ${blocks}
 }
 
+function sha1::main()
+{
+    local input_string=${1}
+    local binary_input_string=$(sha1::binary::fromString "${input_string}")
+    local splitted_blocks=($(sha1::binary::createBlocks ${binary_input_string}))
+
+    foreach block (${splitted_blocks}); do
+        sha1::binary::block::combineAll ${block}
+    ; done
+}
+
 # TODO: Change the function name
 function sha1::binary::block::combineAll()
 {
