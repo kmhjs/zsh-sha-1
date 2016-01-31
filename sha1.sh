@@ -210,7 +210,7 @@ function sha1::binary::mapping::step_mapping()
 # Binary split functions
 #
 
-# String -> [Binary string (512-bits)]
+# Binary string -> [Binary string (512-bits)]
 function sha1::binary::mapping::to_blocks()
 {
     # Zero-padding & Append footer
