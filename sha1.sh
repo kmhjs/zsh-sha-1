@@ -91,7 +91,7 @@ function converter::binary::split()
 # Constants store
 #
 
-# -> [Binary string (32-bits)]
+# -> [Decimal (32-bits)]
 function sha1::binary::constant::initial_internal_states()
 {
     local base_length=32
@@ -111,7 +111,7 @@ function sha1::binary::constant::initial_internal_states()
     echo -n ${states}
 }
 
-# Decimal (0 - 79) -> Binary string (32-bits)
+# Decimal (0 - 79) -> Decimal (32-bits)
 function sha1::binary::constant::step_coef()
 {
     local step_id=${1}
@@ -133,7 +133,7 @@ function sha1::binary::constant::step_coef()
 # Mapping function
 #
 
-# Decimal (0 - 79), Binary string (32-bits), Binary string (32-bits), Binary string (32-bits) -> Binary string (32-bits)
+# Decimal (0 - 79), Decimal (32-bits), Decimal (32-bits), Decimal (32-bits) -> Decimal (32-bits)
 function sha1::binary::mapping::step_mapping()
 {
     local step_id=${1}
@@ -214,7 +214,7 @@ function sha1::binary::mapping::to_blocks()
 # SHA-1 specific computations
 #
 
-# Binary string (512-bits) -> [Binary string (32-bits)]
+# Binary string (512-bits) -> [Decimal (32-bits)]
 function sha1::binary::mapping::to_rotated_blocks()
 {
     # This method computes W16 to W80
@@ -251,7 +251,7 @@ function sha1::binary::mapping::to_rotated_blocks()
     echo ${blocks}
 }
 
-# Binary string (512-bits), [Binary string (32-bits)] -> [Binary string (32-bits)]
+# Binary string (512-bits), [Decimal (32-bits)] -> [Decimal (32-bits)]
 function sha1::binary::mapping::to_sha1_binary()
 {
     # Obtain initial internal states and initialize
@@ -294,7 +294,7 @@ function sha1::binary::mapping::to_sha1_binary()
     echo ${current_internal_states}
 }
 
-# Decimal (0 - 79), [Binary string (32-bits)], Binary string (32-bits) -> [Binary string (32-bits)]
+# Decimal (0 - 79), [Decimal (32-bits)], Decimal (32-bits) -> [Decimal (32-bits)]
 function sha1::binary::mapping::update_internal_states()
 {
     local step_id=${1}
