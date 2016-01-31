@@ -17,51 +17,6 @@ function test::converter::decimal::from_char()
     return 0
 }
 
-function test::converter::decimal::from_binary()
-{
-    local input_value='11111111'
-
-    local expected_result='255'
-
-    local result=$(converter::decimal::from_binary ${input_value})
-
-    if [[ "${result}" != "${expected_result}" ]]; then
-        return 1
-    fi
-
-    return 0
-}
-
-function test::converter::hex::from_binary()
-{
-    local input_value='11111111'
-
-    local expected_result='FF'
-
-    local result=$(converter::hex::from_binary ${input_value})
-
-    if [[ "${result}" != "${expected_result}" ]]; then
-        return 1
-    fi
-
-    return 0
-}
-
-function test::converter::binary::from_hex()
-{
-    local input_value='FF'
-
-    local expected_result='11111111'
-
-    local result=$(converter::binary::from_hex ${input_value})
-
-    if [[ "${result}" != "${expected_result}" ]]; then
-        return 1
-    fi
-
-    return 0
-}
-
 function test::converter::binary::from_decimal()
 {
     local input_value=15

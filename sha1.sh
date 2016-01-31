@@ -10,39 +10,9 @@ function converter::decimal::from_char()
     printf "%d" \'${1}
 }
 
-# Binary string -> Decimal
-function converter::decimal::from_binary()
-{
-    local input_value="0b${1}"
-
-    echo $((${input_value}))
-}
-
-#
-# Converters to hex
-#
-
-# Binary string -> Hex
-function converter::hex::from_binary()
-{
-    local input_value="0b${1}"
-    local results=(${(s:#:)$(([#16] ${input_value}))})
-
-    echo ${results[2]}
-}
-
 #
 # Converters to binary
 #
-
-# Hex -> Binary string
-function converter::binary::from_hex()
-{
-    local input_value="0x${1}"
-    local results=(${(s:#:)$(([#2] ${input_value}))})
-
-    echo ${results[2]}
-}
 
 # Decimal -> Binary string
 function converter::binary::from_decimal()
