@@ -4,50 +4,240 @@ source './sha1.sh'
 
 function test::converter::decimal::from_char()
 {
+    local input_char='A'
+
+    local expected_result='65'
+
+    local result=$(converter::decimal::from_char ${input_char})
+
+    if [[ "${result}" != "${expected_result}" ]]; then
+        return 1
+    fi
+
+    return 0
 }
 
 function test::converter::decimal::from_binary()
 {
+    local input_value='11111111'
+
+    local expected_result='255'
+
+    local result=$(converter::decimal::from_binary ${input_value})
+
+    if [[ "${result}" != "${expected_result}" ]]; then
+        return 1
+    fi
+
+    return 0
 }
 
 function test::converter::hex::from_binary()
 {
+    local input_value='11111111'
+
+    local expected_result='FF'
+
+    local result=$(converter::hex::from_binary ${input_value})
+
+    if [[ "${result}" != "${expected_result}" ]]; then
+        return 1
+    fi
+
+    return 0
 }
 
 function test::converter::binary::from_hex()
 {
+    local input_value='FF'
+
+    local expected_result='11111111'
+
+    local result=$(converter::binary::from_hex ${input_value})
+
+    if [[ "${result}" != "${expected_result}" ]]; then
+        return 1
+    fi
+
+    return 0
 }
 
 function test::converter::binary::from_decimal()
 {
+    local input_value=15
+
+    local expected_result='1111'
+
+    local result=$(converter::binary::from_decimal ${input_value})
+
+    if [[ "${result}" != "${expected_result}" ]]; then
+        return 1
+    fi
+
+    return 0
 }
 
 function test::converter::binary::from_char()
 {
+    local input_char='A'
+
+    local expected_result='01000001'
+
+    local result=$(converter::binary::from_char ${input_char})
+
+    if [[ "${result}" != "${expected_result}" ]]; then
+        return 1
+    fi
+
+    return 0
 }
 
 function test::converter::binary::from_string()
 {
+    local input_string='A Test'
+
+    local expected_result='010000010010000001010100011001010111001101110100'
+
+    local result=$(converter::binary::from_string ${input_string})
+
+    if [[ "${result}" != "${expected_result}" ]]; then
+        return 1
+    fi
+
+    return 0
 }
 
 function test::converter::binary::split()
 {
+    local input_block='010000010010000001010100011001010111001101110100'
+    local block_length=8
+    local delimiter=' '
+
+    local expected_result='01000001 00100000 01010100 01100101 01110011 01110100'
+
+    local result=$(converter::binary::split ${input_block} ${block_length} ${delimiter})
+
+    if [[ "${result}" != "${expected_result}" ]]; then
+        return 1
+    fi
+
+    return 0
 }
 
 function test::sha1::binary::constant::initial_internal_states()
 {
+    local expected_result=('01100111010001010010001100000001' \
+                           '11101111110011011010101110001001' \
+                           '10011000101110101101110011111110' \
+                           '00010000001100100101010001110110' \
+                           '11000011110100101110000111110000')
+
+    local result=($(sha1::binary::constant::initial_internal_states))
+
+    if [[ "${result}" != "${expected_result}" ]]; then
+        return 1
+    fi
+
+    return 0
 }
 
 function test::sha1::binary::constant::step_coef()
 {
+    local expected_results=('01011010100000100111100110011001' \
+                            '01101110110110011110101110100001' \
+                            '10001111000110111011110011011100' \
+                            '11001010011000101100000111010110')
+
+    for i ({0..3}); do
+        local current_step_id=$((${i} * 20))
+
+        local expected_result=${expected_results[$((${i} + 1))]}
+        local result=$(sha1::binary::constant::step_coef ${current_step_id})
+
+        if [[ "${result}" != "${expected_result}" ]]; then
+            return 1
+        fi
+    ; done
+
+    return 0
 }
 
 function test::sha1::binary::mapping::step_mapping()
 {
+    local step_id=0
+
+    local B='11101111110011011010101110001001'
+    local C='10011000101110101101110011111110'
+    local D='00010000001100100101010001110110'
+
+    local expected_result='10011000101110101101110011111110'
+
+    local result=$(sha1::binary::mapping::step_mapping ${step_id} ${B} ${C} ${D})
+
+    if [[ "${result}" != "${expected_result}" ]]; then
+        return 1
+    fi
+
+
+    step_id=20
+
+    B='11011100100010001001111001110101'
+    C='10110101000101000100100011110000'
+    D='01001110101011001011101010110111'
+
+    expected_result='00100111001100000110110000110010'
+
+    result=$(sha1::binary::mapping::step_mapping ${step_id} ${B} ${C} ${D})
+
+    if [[ "${result}" != "${expected_result}" ]]; then
+        return 1
+    fi
+
+
+    step_id=40
+
+    B='01000100110000000111111001110111'
+    C='00011010100110110011101010111011'
+    D='01010011011001010110101011100100'
+
+    expected_result='01010010110000010111101011110111'
+
+    result=$(sha1::binary::mapping::step_mapping ${step_id} ${B} ${C} ${D})
+
+    if [[ "${result}" != "${expected_result}" ]]; then
+        return 1
+    fi
+
+
+    step_id=60
+
+    B='11011100100010001001111001110101'
+    C='10110101000101000100100011110000'
+    D='01001110101011001011101010110111'
+
+    expected_result='00100111001100000110110000110010'
+
+    result=$(sha1::binary::mapping::step_mapping ${step_id} ${B} ${C} ${D})
+
+    if [[ "${result}" != "${expected_result}" ]]; then
+        return 1
+    fi
+
+    return 0
 }
 
 function test::sha1::binary::mapping::to_blocks()
 {
+    local input_block='010000010010000001010100011001010111001101110100'
+    local expected_result='01000001001000000101010001100101011100110111010010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000110000'
+
+    local result=$(sha1::binary::mapping::to_blocks ${input_block})
+
+    if [[ "${result}" != "${expected_result}" ]]; then
+        return 1
+    fi
+
+    return 0
 }
 
 function test::sha1::binary::mapping::to_rotated_blocks()
