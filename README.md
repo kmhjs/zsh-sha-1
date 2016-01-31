@@ -20,6 +20,8 @@ sha1::main ${target_string}
 ## Test
 
 * The test was designed by following contents in [How data encryption software creates one way hash files using the sha1 hashing algorithm.](http://www.metamorphosite.com/one-way-hash-encryption-sha1-data-software).
+* How to run
+    * `./sha1.test.sh`
 
 ## References
 
