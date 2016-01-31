@@ -60,7 +60,27 @@ function test::sha1::binary::mapping::to_sha1_hex()
 
 function test::sha1::binary::mapping::update_internal_states()
 {
-    return 1
+    local step_id=79
+    local current_state=('10100001100010001000100001011011' \
+                         '00111100100011001111000100100000' \
+                         '01111011000001100010000001010010' \
+                         '11001100010010110000111001010011' \
+                         '11101001001001111110100110101011')
+    local input_block='10110111011010010100111100111110'
+
+    local expected_result=('00100111110001101110010101010100' \
+                           '10100001100010001000100001011011' \
+                           '00001111001000110011110001001000' \
+                           '01111011000001100010000001010010' \
+                           '11001100010010110000111001010011')
+
+    local result=$(sha1::binary::mapping::update_internal_states ${step_id} "${current_state}" ${input_block})
+
+    if [[ "${result}" != "${expected_result}" ]]; then
+        return 1
+    fi
+
+    return 0
 }
 
 function test::sha1::main()
