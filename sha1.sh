@@ -290,13 +290,13 @@ function sha1::binary::mapping::to_rotated_blocks()
     echo ${blocks}
 }
 
-# Binary string (512-bits) -> [Binary string (32-bits)]
+# Binary string (512-bits), [Binary string (32-bits)] -> [Binary string (32-bits)]
 function sha1::binary::mapping::to_sha1_binary()
 {
     # Obtain initial internal states and initialize
-    local base_internal_states=($(sha1::binary::constant::initial_internal_states))
-    local current_internal_states=${base_internal_states}
     local input_block=${1}
+    local base_internal_states=($(echo ${2}))
+    local current_internal_states=${base_internal_states}
 
     # Convert (and split) input 512-bits binary string into 80 of 32-bits blocks for each step
     local splitted_blocks=($(sha1::binary::mapping::to_rotated_blocks ${input_block}))
@@ -324,7 +324,7 @@ function sha1::binary::mapping::to_sha1_binary()
         local lhs="0b${base_internal_states[${i}]}"
         local rhs="0b${current_internal_states[${i}]}"
 
-        local result=$(converter::binary::from_decimal $((${lhs} + ${rhs})))
+        local result="${(l.32..0.)}$(converter::binary::from_decimal $((${lhs} + ${rhs})))"
 
         # Shrink the number of bits in the result into 32-bits
         current_internal_states[${i}]="${result[-32, -1]}"
@@ -412,8 +412,7 @@ function sha1::main()
     local binary_input_string=$(converter::binary::from_string "${input_string}")
     local splitted_blocks=($(sha1::binary::mapping::to_blocks ${binary_input_string}))
 
-    local result=''
-
+    local result=($(sha1::binary::constant::initial_internal_states))
     foreach block (${splitted_blocks}); do
         result=($(sha1::binary::mapping::to_sha1_binary ${block} "${result}"))
     ; done

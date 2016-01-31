@@ -337,6 +337,7 @@ function test::sha1::binary::mapping::to_rotated_blocks()
 function test::sha1::binary::mapping::to_sha1_binary()
 {
     local input_block='01000001001000000101010001100101011100110111010010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000110000'
+    local base_state=($(sha1::binary::constant::initial_internal_states))
 
     local expected_result=('10001111000011000000100001010101' \
                            '10010001010101100011001111100100' \
@@ -344,7 +345,7 @@ function test::sha1::binary::mapping::to_sha1_binary()
                            '10001011001110000111010011001000' \
                            '10010000000111011111000001000011')
 
-    local result=($(sha1::binary::mapping::to_sha1_binary ${input_block}))
+    local result=($(sha1::binary::mapping::to_sha1_binary ${input_block} "${base_state}"))
 
     if [[ "${result}" != "${expected_result}" ]]; then
         return 1
@@ -386,6 +387,18 @@ function test::sha1::main()
     local result=$(sha1::main ${input_message})
 
     if [[ "${result}" != "${expected_result}" ]]; then
+        return 1
+    fi
+
+
+    local input_message='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+    local expected_result='761C457BF73B14D27E9E9265C46F4B4DDA11F940'
+
+    local result=$(sha1::main ${input_message})
+
+    if [[ "${result}" != "${expected_result}" ]]; then
+        echo $result
+        echo $expected_result
         return 1
     fi
 
