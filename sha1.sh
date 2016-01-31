@@ -290,8 +290,8 @@ function sha1::binary::mapping::to_rotated_blocks()
     echo ${blocks}
 }
 
-# Binary string (512-bits) -> [Hex]
-function sha1::binary::mapping::to_sha1_hex()
+# Binary string (512-bits) -> [Binary string (32-bits)]
+function sha1::binary::mapping::to_sha1_binary()
 {
     # Obtain initial internal states and initialize
     local base_internal_states=($(sha1::binary::constant::initial_internal_states))
@@ -327,13 +327,10 @@ function sha1::binary::mapping::to_sha1_hex()
         local result=$(converter::binary::from_decimal $((${lhs} + ${rhs})))
 
         # Shrink the number of bits in the result into 32-bits
-        result="${result[-32, -1]}"
-
-        # Store to results array in hex notation
-        hex_result=(${hex_result} $(converter::hex::from_binary ${result}))
+        current_internal_states[${i}]="${result[-32, -1]}"
     ; done
 
-    echo ${hex_result}
+    echo ${current_internal_states}
 }
 
 # Decimal (0 - 79), [Binary string (32-bits)], Binary string (32-bits) -> [Binary string (32-bits)]
@@ -418,8 +415,17 @@ function sha1::main()
     local result=''
 
     foreach block (${splitted_blocks}); do
-        result="${result}$(sha1::binary::mapping::to_sha1_hex ${block})"
+        result=($(sha1::binary::mapping::to_sha1_binary ${block} "${result}"))
     ; done
 
-    echo ${result// /}
+    # Convert to hex
+    local hex_result=''
+    for i ({1..5}); do
+        local block=${result[${i}]}
+
+        # Store to results array in hex notation
+        hex_result="${hex_result}$(converter::hex::from_binary ${block})"
+    ; done
+
+    echo ${hex_result// /}
 }
