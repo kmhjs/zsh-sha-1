@@ -17,6 +17,21 @@ function test::converter::decimal::from_char()
     return 0
 }
 
+function test::converter::hex::from_decimal()
+{
+    local input_value=255
+
+    local expected_result='FF'
+
+    local result=$(converter::hex::from_decimal ${input_value})
+
+    if [[ "${result}" != "${expected_result}" ]]; then
+        return 1
+    fi
+
+    return 0
+}
+
 function test::converter::binary::from_decimal()
 {
     local input_value=15

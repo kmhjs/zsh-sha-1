@@ -11,6 +11,19 @@ function converter::decimal::from_char()
 }
 
 #
+# Converters to hex
+#
+
+# Decimal -> hex
+function converter::hex::from_decimal()
+{
+    local input_value=${1}
+    local results=(${(s:#:)$(([#16] ${input_value}))})
+
+    echo ${results[2]}
+}
+
+#
 # Converters to binary
 #
 
@@ -371,7 +384,7 @@ function sha1::main()
         local block=${result[${i}]}
 
         # Store to results array in hex notation
-        hex_result="${hex_result}$(echo $(([#16] ${block})) | cut -d '#' -f 2)"
+        hex_result="${hex_result}$(converter::hex::from_decimal ${block})"
     ; done
 
     echo ${hex_result}
