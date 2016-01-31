@@ -109,7 +109,7 @@ function converter::binary::split()
 #
 
 # -> [Binary string (32-bits)]
-function sha1::binary::constant::initial_internal_states()
+function sha1::constant::initial_internal_states()
 {
     local base_length=32
     local states=(
@@ -132,7 +132,7 @@ function sha1::binary::constant::initial_internal_states()
 }
 
 # Decimal (0 - 79) -> Binary string (32-bits)
-function sha1::binary::constant::step_coef()
+function sha1::constant::step_coef()
 {
     local step_id=${1}
 
@@ -158,7 +158,7 @@ function sha1::binary::constant::step_coef()
 #
 
 # Decimal (0 - 79), Binary string (32-bits), Binary string (32-bits), Binary string (32-bits) -> Binary string (32-bits)
-function sha1::binary::mapping::step_mapping()
+function sha1::mapping::step_mapping()
 {
     local step_id=${1}
     local base_length=32
@@ -211,7 +211,7 @@ function sha1::binary::mapping::step_mapping()
 #
 
 # Binary string -> [Binary string (512-bits)]
-function sha1::binary::mapping::to_blocks()
+function sha1::mapping::to_blocks()
 {
     # Zero-padding & Append footer
     local base_length=512
@@ -251,7 +251,7 @@ function sha1::binary::mapping::to_blocks()
 #
 
 # Binary string (512-bits) -> [Binary string (32-bits)]
-function sha1::binary::mapping::to_rotated_blocks()
+function sha1::mapping::to_rotated_blocks()
 {
     # This method computes W16 to W80
     local input_block=${1}
@@ -284,7 +284,7 @@ function sha1::binary::mapping::to_rotated_blocks()
 }
 
 # Binary string (512-bits), [Binary string (32-bits)] -> [Binary string (32-bits)]
-function sha1::binary::mapping::to_sha1_binary()
+function sha1::mapping::to_sha1_binary()
 {
     # Obtain initial internal states and initialize
     local input_block=${1}
@@ -292,7 +292,7 @@ function sha1::binary::mapping::to_sha1_binary()
     local current_internal_states=${base_internal_states}
 
     # Convert (and split) input 512-bits binary string into 80 of 32-bits blocks for each step
-    local splitted_blocks=($(sha1::binary::mapping::to_rotated_blocks ${input_block}))
+    local splitted_blocks=($(sha1::mapping::to_rotated_blocks ${input_block}))
 
     # Process each steps (80 steps in total)
     for idx ({1..80}); do
@@ -303,7 +303,7 @@ function sha1::binary::mapping::to_sha1_binary()
         local step_id=$((${idx} - 1))
 
         # Update internal states
-        current_internal_states=($(sha1::binary::mapping::update_internal_states \
+        current_internal_states=($(sha1::mapping::update_internal_states \
                                    ${step_id} \
                                    "${current_internal_states}" \
                                    ${splitted_block}))
@@ -327,7 +327,7 @@ function sha1::binary::mapping::to_sha1_binary()
 }
 
 # Decimal (0 - 79), [Binary string (32-bits)], Binary string (32-bits) -> [Binary string (32-bits)]
-function sha1::binary::mapping::update_internal_states()
+function sha1::mapping::update_internal_states()
 {
     local step_id=${1}
     local current_internal_states=($(echo ${2}))
@@ -342,7 +342,7 @@ function sha1::binary::mapping::update_internal_states()
     # --- Computation related to F value
 
     # Compute F value for step value and internal states
-    local F=$(sha1::binary::mapping::step_mapping \
+    local F=$(sha1::mapping::step_mapping \
               ${step_id} \
               ${current_internal_states[2]} \
               ${current_internal_states[3]} \
@@ -374,7 +374,7 @@ function sha1::binary::mapping::update_internal_states()
     # --- Computation related to K value
 
     # Obtain step constant (K value) for current step ID
-    local K=$(sha1::binary::constant::step_coef ${step_id})
+    local K=$(sha1::constant::step_coef ${step_id})
 
     lhs="0b${new_internal_states[5]}"
     rhs="0b${K}"
@@ -403,11 +403,11 @@ function sha1::main()
 {
     local input_string=${1}
     local binary_input_string=$(converter::binary::from_string "${input_string}")
-    local splitted_blocks=($(sha1::binary::mapping::to_blocks ${binary_input_string}))
+    local splitted_blocks=($(sha1::mapping::to_blocks ${binary_input_string}))
 
-    local result=($(sha1::binary::constant::initial_internal_states))
+    local result=($(sha1::constant::initial_internal_states))
     foreach block (${splitted_blocks}); do
-        result=($(sha1::binary::mapping::to_sha1_binary ${block} "${result}"))
+        result=($(sha1::mapping::to_sha1_binary ${block} "${result}"))
     ; done
 
     # Convert to hex

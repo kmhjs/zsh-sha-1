@@ -94,7 +94,7 @@ function test::converter::binary::split()
     return 0
 }
 
-function test::sha1::binary::constant::initial_internal_states()
+function test::sha1::constant::initial_internal_states()
 {
     local expected_result=($((0b01100111010001010010001100000001)) \
                            $((0b11101111110011011010101110001001)) \
@@ -102,7 +102,7 @@ function test::sha1::binary::constant::initial_internal_states()
                            $((0b00010000001100100101010001110110)) \
                            $((0b11000011110100101110000111110000)))
 
-    local result=($(sha1::binary::constant::initial_internal_states))
+    local result=($(sha1::constant::initial_internal_states))
 
     if [[ "${result}" != "${expected_result}" ]]; then
         return 1
@@ -111,7 +111,7 @@ function test::sha1::binary::constant::initial_internal_states()
     return 0
 }
 
-function test::sha1::binary::constant::step_coef()
+function test::sha1::constant::step_coef()
 {
     local expected_results=($((0b01011010100000100111100110011001)) \
                             $((0b01101110110110011110101110100001)) \
@@ -122,7 +122,7 @@ function test::sha1::binary::constant::step_coef()
         local current_step_id=$((${i} * 20))
 
         local expected_result=${expected_results[$((${i} + 1))]}
-        local result=$(sha1::binary::constant::step_coef ${current_step_id})
+        local result=$(sha1::constant::step_coef ${current_step_id})
 
         if [[ "${result}" != "${expected_result}" ]]; then
             return 1
@@ -132,7 +132,7 @@ function test::sha1::binary::constant::step_coef()
     return 0
 }
 
-function test::sha1::binary::mapping::step_mapping()
+function test::sha1::mapping::step_mapping()
 {
     local step_id=0
 
@@ -142,7 +142,7 @@ function test::sha1::binary::mapping::step_mapping()
 
     local expected_result=$((0b10011000101110101101110011111110))
 
-    local result=$(sha1::binary::mapping::step_mapping ${step_id} ${B} ${C} ${D})
+    local result=$(sha1::mapping::step_mapping ${step_id} ${B} ${C} ${D})
 
     if [[ "${result}" != "${expected_result}" ]]; then
         return 1
@@ -157,7 +157,7 @@ function test::sha1::binary::mapping::step_mapping()
 
     expected_result=$((0b00100111001100000110110000110010))
 
-    result=$(sha1::binary::mapping::step_mapping ${step_id} ${B} ${C} ${D})
+    result=$(sha1::mapping::step_mapping ${step_id} ${B} ${C} ${D})
 
     if [[ "${result}" != "${expected_result}" ]]; then
         return 1
@@ -172,7 +172,7 @@ function test::sha1::binary::mapping::step_mapping()
 
     expected_result=$((0b01010010110000010111101011110111))
 
-    result=$(sha1::binary::mapping::step_mapping ${step_id} ${B} ${C} ${D})
+    result=$(sha1::mapping::step_mapping ${step_id} ${B} ${C} ${D})
 
     if [[ "${result}" != "${expected_result}" ]]; then
         return 1
@@ -187,7 +187,7 @@ function test::sha1::binary::mapping::step_mapping()
 
     expected_result=$((0b00100111001100000110110000110010))
 
-    result=$(sha1::binary::mapping::step_mapping ${step_id} ${B} ${C} ${D})
+    result=$(sha1::mapping::step_mapping ${step_id} ${B} ${C} ${D})
 
     if [[ "${result}" != "${expected_result}" ]]; then
         return 1
@@ -196,12 +196,12 @@ function test::sha1::binary::mapping::step_mapping()
     return 0
 }
 
-function test::sha1::binary::mapping::to_blocks()
+function test::sha1::mapping::to_blocks()
 {
     local input_block='010000010010000001010100011001010111001101110100'
     local expected_result='01000001001000000101010001100101011100110111010010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000110000'
 
-    local result=$(sha1::binary::mapping::to_blocks ${input_block})
+    local result=$(sha1::mapping::to_blocks ${input_block})
 
     if [[ "${result}" != "${expected_result}" ]]; then
         return 1
@@ -211,7 +211,7 @@ function test::sha1::binary::mapping::to_blocks()
     input_block=${(l.447..1.)}
     expected_result="${(l.447..1.)}10000000000000000000000000000000000000000000000000000000110111111"
 
-    result=$(sha1::binary::mapping::to_blocks ${input_block})
+    result=$(sha1::mapping::to_blocks ${input_block})
 
     if [[ "${result}" != "${expected_result}" ]]; then
         return 1
@@ -221,7 +221,7 @@ function test::sha1::binary::mapping::to_blocks()
     input_block=${(l.448..1.)}
     expected_result="${(l.448..1.)}1${(l.63..0.)} ${(l.448..0.)}0000000000000000000000000000000000000000000000000000000111000000"
 
-    result=$(sha1::binary::mapping::to_blocks ${input_block})
+    result=$(sha1::mapping::to_blocks ${input_block})
 
     if [[ "${result}" != "${expected_result}" ]]; then
         return 1
@@ -230,7 +230,7 @@ function test::sha1::binary::mapping::to_blocks()
     return 0
 }
 
-function test::sha1::binary::mapping::to_rotated_blocks()
+function test::sha1::mapping::to_rotated_blocks()
 {
     local input_block='01000001001000000101010001100101011100110111010010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000110000'
 
@@ -315,7 +315,7 @@ function test::sha1::binary::mapping::to_rotated_blocks()
                            $((0b10001011100011011111100111110101)) \
                            $((0b10110111011010010100111100111110)))
 
-    local result=($(sha1::binary::mapping::to_rotated_blocks ${input_block}))
+    local result=($(sha1::mapping::to_rotated_blocks ${input_block}))
 
     if [[ "${result}" != "${expected_result}" ]]; then
         return 1
@@ -324,10 +324,10 @@ function test::sha1::binary::mapping::to_rotated_blocks()
     return 0
 }
 
-function test::sha1::binary::mapping::to_sha1_binary()
+function test::sha1::mapping::to_sha1_binary()
 {
     local input_block='01000001001000000101010001100101011100110111010010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000110000'
-    local base_state=($(sha1::binary::constant::initial_internal_states))
+    local base_state=($(sha1::constant::initial_internal_states))
 
     local expected_result=($((0b10001111000011000000100001010101)) \
                            $((0b10010001010101100011001111100100)) \
@@ -335,7 +335,7 @@ function test::sha1::binary::mapping::to_sha1_binary()
                            $((0b10001011001110000111010011001000)) \
                            $((0b10010000000111011111000001000011)))
 
-    local result=($(sha1::binary::mapping::to_sha1_binary ${input_block} "${base_state}"))
+    local result=($(sha1::mapping::to_sha1_binary ${input_block} "${base_state}"))
 
     if [[ "${result}" != "${expected_result}" ]]; then
         return 1
@@ -344,7 +344,7 @@ function test::sha1::binary::mapping::to_sha1_binary()
     return 0
 }
 
-function test::sha1::binary::mapping::update_internal_states()
+function test::sha1::mapping::update_internal_states()
 {
     local step_id=79
     local current_state=($((0b10100001100010001000100001011011)) \
@@ -360,7 +360,7 @@ function test::sha1::binary::mapping::update_internal_states()
                            $((0b01111011000001100010000001010010)) \
                            $((0b11001100010010110000111001010011)))
 
-    local result=$(sha1::binary::mapping::update_internal_states ${step_id} "${current_state}" ${input_block})
+    local result=$(sha1::mapping::update_internal_states ${step_id} "${current_state}" ${input_block})
 
     if [[ "${result}" != "${expected_result}" ]]; then
         return 1
