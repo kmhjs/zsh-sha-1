@@ -95,7 +95,7 @@ function converter::binary::split()
     local result_string=''
 
     while [[ $((${#input_binary_string} - ${block_length})) > 0 ]]; do
-        result_string="${result_string}${delimiter}${input_binary_string[1,${block_length}]}"
+        result_string="${result_string}${delimiter}${input_binary_string[1, ${block_length}]}"
         input_binary_string="${input_binary_string[$((${block_length} + 1)), -1]}"
     ; done
 
