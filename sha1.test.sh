@@ -237,6 +237,26 @@ function test::sha1::binary::mapping::to_blocks()
         return 1
     fi
 
+
+    input_block=${(l.447..1.)}
+    expected_result="${(l.447..1.)}10000000000000000000000000000000000000000000000000000000110111111"
+
+    result=$(sha1::binary::mapping::to_blocks ${input_block})
+
+    if [[ "${result}" != "${expected_result}" ]]; then
+        return 1
+    fi
+
+
+    input_block=${(l.448..1.)}
+    expected_result="${(l.448..1.)}1${(l.63..0.)} ${(l.448..0.)}0000000000000000000000000000000000000000000000000000000111000000"
+
+    result=$(sha1::binary::mapping::to_blocks ${input_block})
+
+    if [[ "${result}" != "${expected_result}" ]]; then
+        return 1
+    fi
+
     return 0
 }
 
@@ -391,10 +411,10 @@ function test::sha1::main()
     fi
 
 
-    local input_message='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-    local expected_result='761C457BF73B14D27E9E9265C46F4B4DDA11F940'
+    input_message='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+    expected_result='761C457BF73B14D27E9E9265C46F4B4DDA11F940'
 
-    local result=$(sha1::main ${input_message})
+    result=$(sha1::main ${input_message})
 
     if [[ "${result}" != "${expected_result}" ]]; then
         echo $result
