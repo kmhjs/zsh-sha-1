@@ -374,5 +374,5 @@ function sha1::main()
         hex_result="${hex_result}$(echo $(([#16] ${block})) | cut -d '#' -f 2)"
     ; done
 
-    echo ${hex_result// /}
+    echo ${hex_result}
 }

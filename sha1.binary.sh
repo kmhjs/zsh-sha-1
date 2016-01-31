@@ -419,5 +419,5 @@ function sha1::main()
         hex_result="${hex_result}$(converter::hex::from_binary ${block})"
     ; done
 
-    echo ${hex_result// /}
+    echo ${hex_result}
 }
