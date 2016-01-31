@@ -215,42 +215,35 @@ function sha1::binary::mapping::to_blocks()
 {
     # Zero-padding & Append footer
     local base_length=512
-    local reserved_length=64
+    local data_length_info_length=64
     local input_binary_string=${1}
-    local data_length=$((${base_length} - ${reserved_length}))
 
-    # Split input binary string into (512 - 64)-bits blocks
-    local blocks=($(converter::binary::split ${input_binary_string} ${data_length} ' '))
+    # Compute input binary length in binary notation and padding to 64-bits
+    local input_binary_length_info=$(converter::binary::from_decimal ${#input_binary_string})
+    input_binary_length_info="${(l.$((${data_length_info_length} - ${#input_binary_length_info}))..0.)}${input_binary_length_info}"
 
-    local result_blocks=''
-    local delimiter=' '
+    # Append 1 to input binary string
+    input_binary_string="${input_binary_string}1"
 
-    # Complete to create 512-bits blocks
-    for idx ({1..${#blocks}}); do
-        # Compute original message length (number of bits), and append 64-bits padded binary data with 0
-        local block=${blocks[${idx}]}
-        local block_length_binary=$(converter::binary::from_decimal ${#block})
-        block_length_binary="${(l.$((${reserved_length} - ${#block_length_binary}))..0.)}${block_length_binary}"
+    # Split input binary string into 512-bits blocks
+    local blocks=($(converter::binary::split "${input_binary_string}" ${base_length} ' '))
+    local last_element=${blocks[-1]}
+    local end_length=$(((${base_length} - ${data_length_info_length}) - ${#last_element}))
 
-        # If reached to the end of message
-        [[ ${idx} == ${#blocks} ]] && {
-            local padding_length=$((${data_length} - ${#block}))
+    if [[ ${end_length} == 0 ]]; then
+        # Nothing to do
 
-            # When padding is required, append padding information '10000000', and padding
-            [[ $((${padding_length} - 8)) > 0 ]] && {
-                block="${block}10000000"
-                padding_length=$((${padding_length} - 8))
-            }
+    elif [[ ${end_length} > 0 ]]; then
+        blocks[-1]="${last_element}${(l.${end_length}..0.)}"
 
-            # Complete block
-            block="${block}${(l.${padding_length}..0.)}"
-        }
+    else
+        blocks[-1]="${last_element}${(l.$((${base_length} - ${#last_element}))..0.)}"
+        blocks=(${blocks} ${(l.$((${base_length} - ${data_length_info_length}))..0.)})
+    fi
 
-        # Append to result blocks
-        result_blocks="${result_blocks}${delimiter}${block}${block_length_binary}"
-    ; done
+    blocks[-1]="${blocks[-1]}${input_binary_length_info}"
 
-    echo -n ${result_blocks[2, -1]}
+    echo -n ${blocks}
 }
 
 #
@@ -290,13 +283,13 @@ function sha1::binary::mapping::to_rotated_blocks()
     echo ${blocks}
 }
 
-# Binary string (512-bits) -> [Hex]
-function sha1::binary::mapping::to_sha1_hex()
+# Binary string (512-bits), [Binary string (32-bits)] -> [Binary string (32-bits)]
+function sha1::binary::mapping::to_sha1_binary()
 {
     # Obtain initial internal states and initialize
-    local base_internal_states=($(sha1::binary::constant::initial_internal_states))
-    local current_internal_states=${base_internal_states}
     local input_block=${1}
+    local base_internal_states=($(echo ${2}))
+    local current_internal_states=${base_internal_states}
 
     # Convert (and split) input 512-bits binary string into 80 of 32-bits blocks for each step
     local splitted_blocks=($(sha1::binary::mapping::to_rotated_blocks ${input_block}))
@@ -324,16 +317,13 @@ function sha1::binary::mapping::to_sha1_hex()
         local lhs="0b${base_internal_states[${i}]}"
         local rhs="0b${current_internal_states[${i}]}"
 
-        local result=$(converter::binary::from_decimal $((${lhs} + ${rhs})))
+        local result="${(l.32..0.)}$(converter::binary::from_decimal $((${lhs} + ${rhs})))"
 
         # Shrink the number of bits in the result into 32-bits
-        result="${result[-32, -1]}"
-
-        # Store to results array in hex notation
-        hex_result=(${hex_result} $(converter::hex::from_binary ${result}))
+        current_internal_states[${i}]="${result[-32, -1]}"
     ; done
 
-    echo ${hex_result}
+    echo ${current_internal_states}
 }
 
 # Decimal (0 - 79), [Binary string (32-bits)], Binary string (32-bits) -> [Binary string (32-bits)]
@@ -415,11 +405,19 @@ function sha1::main()
     local binary_input_string=$(converter::binary::from_string "${input_string}")
     local splitted_blocks=($(sha1::binary::mapping::to_blocks ${binary_input_string}))
 
-    local result=''
-
+    local result=($(sha1::binary::constant::initial_internal_states))
     foreach block (${splitted_blocks}); do
-        result="${result}$(sha1::binary::mapping::to_sha1_hex ${block})"
+        result=($(sha1::binary::mapping::to_sha1_binary ${block} "${result}"))
     ; done
 
-    echo ${result// /}
+    # Convert to hex
+    local hex_result=''
+    for i ({1..5}); do
+        local block=${result[${i}]}
+
+        # Store to results array in hex notation
+        hex_result="${hex_result}$(converter::hex::from_binary ${block})"
+    ; done
+
+    echo ${hex_result// /}
 }
